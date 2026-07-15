@@ -1108,8 +1108,19 @@ function normalizeApplication(a, idx){
     'If applicable, what levels of study you want to include in the agreement? (For long term mobilities) 2', 'level2', 'studyLevel2',
     'If applicable, what levels of study you want to include in the agreement? (For long term mobilities)', 'studyLevel', 'level', 'Study level'
   ]);
-  var langStudents = pick(a, ['What is required level of English at your institution for incoming students?', 'English requirement for students', 'englishStudents']);
-  var langStaff = pick(a, ['What is required level of English at your institution for incoming employees?', 'English requirement for staff', 'englishStaff']);
+  var langStudents = pick(a, [
+    'languageStudents',
+    'What is required level of English at your institution for incoming students?',
+    'English requirement for students',
+    'englishStudents'
+  ]);
+
+  var langStaff = pick(a, [
+    'languageStaff',
+    'What is required level of English at your institution for incoming employees?',
+    'English requirement for staff',
+    'englishStaff'
+  ]);
   var langOther = pick(a, ['If your institution requires knowledge of a language other than English for incoming staff and students, please specify:', 'Other language requirements', 'otherLanguage']);
   var contactName = pick(a, ['Name of person responsible for signing the inter institutional agreements at your institution?', 'contactName', 'contactPerson']);
   var contactEmail = pick(a, ['E-mail of person responsible for signing the inter institutional agreements at your institution?', 'contactEmail', 'Contact email']);
