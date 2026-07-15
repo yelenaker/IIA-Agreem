@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Communication · STU International Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS — identical to statistics.html / map.html
+   ============================================================ */
+:root{
+  --bg:#F6F7FB;
+  --surface:#FFFFFF;
+  --surface-sunken:#F0F1F5;
+  --border:#E3E6ED;
+  --border-strong:#CBD0DB;
+  --text:#14161F;
+  --text-secondary:#5B6072;
+  --text-tertiary:#8A8FA0;
+  --accent:#4954E6;
+  --accent-hover:#3B45D1;
+  --accent-soft:#EEF0FE;
+  --gold:#B8873A;
+  --gold-soft:#FBF1E1;
+  --amber:#C9821A;
+  --amber-soft:#FDF1DF;
+  --red:#D6373F;
+  --red-soft:#FCEAEB;
+  --shadow-sm:0 1px 2px 0 rgba(20,22,31,.05),0 1px 1px 0 rgba(20,22,31,.03);
+  --shadow-md:0 4px 10px -2px rgba(20,22,31,.08),0 2px 4px -2px rgba(20,22,31,.04);
+  --shadow-lg:0 16px 40px -12px rgba(20,22,31,.18);
+  --radius-sm:8px;
+  --radius:12px;
+  --radius-lg:18px;
+  --font-ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+  --status-new:#4954E6; --status-new-soft:#EEF0FE;
+  --status-progress:#C9821A; --status-progress-soft:#FDF1DF;
+  --status-signed:#B8873A; --status-signed-soft:#FBF1E1;
+  --status-rejected:#D6373F; --status-rejected-soft:#FCEAEB;
+}
+[data-theme="dark"]{
+  --bg:#0C0D12;
+  --surface:#15171F;
+  --surface-sunken:#10121A;
+  --border:#262A36;
+  --border-strong:#34394A;
+  --text:#EDEEF3;
+  --text-secondary:#A0A5B5;
+  --text-tertiary:#6B7080;
+  --accent:#7C86F2;
+  --accent-hover:#939CF5;
+  --accent-soft:#20244A;
+  --gold:#D9AE64;
+  --gold-soft:#2E2413;
+  --amber:#E0A542;
+  --amber-soft:#302710;
+  --red:#F0656C;
+  --red-soft:#361A1D;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 6px 16px rgba(0,0,0,.45);
+  --shadow-lg:0 24px 56px rgba(0,0,0,.6);
+  --status-new:#7C86F2; --status-new-soft:#20244A;
+  --status-progress:#E0A542; --status-progress-soft:#302710;
+  --status-signed:#D9AE64; --status-signed-soft:#2E2413;
+  --status-rejected:#F0656C; --status-rejected-soft:#361A1D;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-ui);
+  -webkit-font-smoothing:antialiased;
+  transition:background .25s ease,color .25s ease;
+  min-height:100vh;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.02em;}
+p{margin:0;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+input,textarea{font-family:inherit;}
+::selection{background:var(--accent);color:#fff;}
+.hidden{display:none !important;}
+.muted{color:var(--text-tertiary);font-size:13px;}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:1000;
+  display:flex;align-items:center;gap:24px;
+  padding:14px 28px;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:10px;margin-right:8px;}
+.brand-mark{width:32px;height:32px;flex:none;}
+.brand-text{display:flex;flex-direction:column;line-height:1.15;}
+.brand-name{font-weight:700;font-size:14.5px;}
+.brand-sub{font-size:11.5px;color:var(--text-tertiary);}
+.topbar-nav{display:flex;gap:4px;flex:1;}
+.nav-link{
+  padding:8px 14px;border-radius:8px;font-size:14px;font-weight:500;
+  color:var(--text-secondary);transition:background .15s,color .15s;
+}
+.nav-link:hover{background:var(--surface-sunken);color:var(--text);}
+.nav-link.active{background:var(--accent-soft);color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.icon-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text-secondary);
+  transition:border-color .15s,color .15s,transform .15s;
+}
+.icon-btn:hover{border-color:var(--border-strong);color:var(--text);}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.admin-link{
+  font-size:13px;font-weight:600;color:var(--text-secondary);
+  border:1px solid var(--border);border-radius:9px;padding:8px 12px;
+  transition:border-color .15s,color .15s;
+}
+.admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* ============================================================
+   PAGE LAYOUT
+   ============================================================ */
+.page{max-width:1320px;margin:0 auto;padding:32px 28px 64px;}
+.page-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  flex-wrap:wrap;gap:14px;margin-bottom:26px;
+}
+.page-header h1{font-size:26px;}
+.page-sub{color:var(--text-secondary);font-size:14.5px;margin-top:4px;}
+.page-actions{display:flex;align-items:center;gap:14px;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 14px;border-radius:9px;font-size:13.5px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  transition:border-color .15s,transform .1s,background .15s;
+}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.btn:hover{border-color:var(--border-strong);}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn.spinning svg{animation:spin .7s linear infinite;}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+.btn-block{width:100%;justify-content:center;}
+.btn-sm{padding:7px 11px;font-size:12.5px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ============================================================
+   STAT / KPI CARDS
+   ============================================================ */
+.cards-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;display:flex;flex-direction:column;gap:14px;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,border-color .2s,transform .2s;
+}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.stat-icon{
+  width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+}
+.stat-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.stat-value{
+  font-family:var(--font-mono);font-size:28px;font-weight:600;letter-spacing:-.01em;display:block;
+}
+.stat-label{font-size:13px;color:var(--text-secondary);font-weight:500;}
+
+/* skeleton */
+.skeleton{position:relative;overflow:hidden;background:var(--surface-sunken);border-radius:var(--radius-lg);}
+.skeleton::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  transform:translateX(-100%);animation:shimmer 1.4s infinite;
+}
+[data-theme="dark"] .skeleton::after{background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%);}
+@keyframes shimmer{100%{transform:translateX(100%);}}
+.skeleton-card{height:104px;border:1px solid var(--border);}
+.skeleton-row{height:82px;border:1px solid var(--border);border-radius:var(--radius);}
+.skeleton-panel{height:420px;border:1px solid var(--border);}
+
+/* ============================================================
+   WORKSPACE LAYOUT (sidebar + right panel)
+   ============================================================ */
+.comm-layout{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start;}
+.list-col{display:flex;flex-direction:column;gap:16px;position:sticky;top:82px;}
+
+.filter-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:16px;box-shadow:var(--shadow-sm);
+}
+.filter-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;}
+.filter-card-head h3{font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-tertiary);font-weight:700;}
+
+/* search */
+.search-wrap{position:relative;}
+.search-wrap svg{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;stroke:var(--text-tertiary);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+  pointer-events:none;
+}
+.search-input{
+  width:100%;padding:10px 12px 10px 36px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface-sunken);color:var(--text);font-size:13.5px;
+  transition:border-color .15s,background .15s;
+}
+.search-input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+.search-input::placeholder{color:var(--text-tertiary);}
+
+/* segmented filter */
+.segmented{display:flex;background:var(--surface-sunken);border-radius:10px;padding:3px;gap:2px;margin-top:12px;}
+.segmented-btn{
+  flex:1;text-align:center;padding:8px 6px;border-radius:8px;font-size:12.5px;font-weight:600;
+  color:var(--text-secondary);border:none;background:transparent;
+  transition:background .15s,color .15s,box-shadow .15s;
+}
+.segmented-btn.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm);}
+.segmented-count{
+  display:inline-block;margin-left:5px;font-family:var(--font-mono);font-size:10.5px;
+  color:var(--text-tertiary);
+}
+.segmented-btn.active .segmented-count{color:var(--accent);}
+
+/* application list */
+.app-list-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px;box-shadow:var(--shadow-sm);
+}
+.app-list{display:flex;flex-direction:column;gap:7px;max-height:560px;overflow-y:auto;margin:0 -4px;padding:2px 4px;}
+.app-list::-webkit-scrollbar{width:6px;}
+.app-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px;}
+.app-item{
+  border:1.6px solid var(--border);border-radius:var(--radius);padding:12px 13px;
+  cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface);
+}
+.app-item:hover{border-color:var(--border-strong);}
+.app-item.active{border-color:var(--accent);background:var(--accent-soft);}
+.app-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.app-item-uni{font-size:13.3px;font-weight:700;line-height:1.3;}
+.app-item-country{display:flex;align-items:center;gap:4px;font-size:11.3px;color:var(--text-tertiary);margin-top:3px;}
+.app-item-country svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;flex:none;}
+.app-item-applicant{display:flex;align-items:center;gap:6px;font-size:12.3px;color:var(--text-secondary);margin-top:8px;}
+.app-item-applicant svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;flex:none;}
+.app-item-stage{font-size:11px;color:var(--text-tertiary);margin-top:6px;font-family:var(--font-mono);}
+.app-list-empty{padding:36px 12px;text-align:center;color:var(--text-tertiary);font-size:13px;}
+
+/* badges */
+.badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;flex:none;white-space:nowrap;
+}
+.badge-new{background:var(--status-new-soft);color:var(--status-new);}
+.badge-progress{background:var(--status-progress-soft);color:var(--status-progress);}
+.badge-signed{background:var(--status-signed-soft);color:var(--status-signed);}
+.badge-rejected{background:var(--status-rejected-soft);color:var(--status-rejected);}
+
+/* ============================================================
+   RIGHT PANEL — workspace
+   ============================================================ */
+.workspace-col{min-width:0;}
+.section-title{font-size:12.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-tertiary);margin-bottom:12px;}
+
+/* detail card */
+.detail-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);padding:22px;margin-bottom:18px;
+}
+.detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border);}
+.detail-title{font-size:18px;font-weight:700;letter-spacing:-.01em;}
+.detail-sub{display:flex;align-items:center;gap:6px;font-size:12.8px;color:var(--text-secondary);margin-top:5px;}
+.detail-sub svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;}
+.detail-row.full{grid-column:1/-1;}
+.detail-label{font-size:10.5px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;font-weight:700;margin-bottom:5px;}
+.detail-value{font-size:13.3px;color:var(--text);line-height:1.55;}
+.detail-value a{color:var(--accent);}
+.detail-value.empty{color:var(--text-tertiary);font-style:italic;}
+.detail-subrow{font-size:13.3px;color:var(--text);line-height:1.6;}
+.detail-subrow .muted{margin-right:4px;}
+.mono{font-family:var(--font-mono);font-size:12.5px;background:var(--surface-sunken);border:1px solid var(--border);border-radius:6px;padding:2px 7px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:5px;}
+.chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--accent-soft);color:var(--accent);}
+.chip.chip-muted{background:var(--surface-sunken);color:var(--text-tertiary);}
+
+/* email card */
+.email-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);padding:22px;
+}
+.template-choice{display:flex;gap:10px;margin-bottom:20px;}
+.template-option{
+  flex:1;display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:var(--radius);
+  border:1.6px solid var(--border);cursor:pointer;transition:border-color .15s,background .15s;
+}
+.template-option:hover{border-color:var(--border-strong);}
+.template-option.active{border-color:var(--accent);background:var(--accent-soft);}
+.template-option input{
+  appearance:none;-webkit-appearance:none;flex:none;margin-top:2px;
+  width:16px;height:16px;border-radius:50%;border:1.6px solid var(--border-strong);
+  background:var(--surface);position:relative;
+}
+.template-option input:checked{border-color:var(--accent);}
+.template-option input:checked::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent);}
+.template-option-text strong{display:block;font-size:13.3px;}
+.template-option-text span{font-size:11.3px;color:var(--text-tertiary);line-height:1.4;}
+
+.field-hint{font-size:11px;color:var(--text-tertiary);margin-top:6px;}
+.field-hint.warn{color:var(--amber);}
+
+/* sender row */
+.sender-row{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-bottom:14px;background:var(--surface-sunken);border-radius:var(--radius);}
+.sender-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;flex:none;}
+.sender-text{line-height:1.35;min-width:0;}
+.sender-name{font-size:13px;font-weight:700;}
+.sender-email{font-size:11.5px;color:var(--text-tertiary);}
+
+/* date filter */
+.date-filter{margin-top:12px;position:relative;}
+.date-filter-btn{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:9px 12px;border-radius:9px;border:1px solid var(--border);background:var(--surface-sunken);
+  font-size:12.8px;font-weight:600;color:var(--text-secondary);
+}
+.date-filter-btn:hover{border-color:var(--border-strong);}
+.date-filter-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;flex:none;}
+.date-filter-panel{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);padding:10px;display:flex;flex-direction:column;gap:4px;
+}
+.date-filter-option{
+  padding:8px 10px;border-radius:7px;font-size:12.8px;font-weight:500;color:var(--text);
+  border:none;background:transparent;text-align:left;
+}
+.date-filter-option:hover{background:var(--surface-sunken);}
+.date-filter-option.active{background:var(--accent-soft);color:var(--accent);font-weight:700;}
+.date-filter-custom{display:flex;gap:6px;padding:6px 4px 2px;border-top:1px solid var(--border);margin-top:4px;}
+.date-filter-custom input{flex:1;min-width:0;border:1px solid var(--border);border-radius:6px;padding:6px 7px;font-size:12px;background:var(--surface);color:var(--text);}
+
+/* Outlook-style editor */
+.editor-card{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);overflow:hidden;}
+.editor-row{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border);}
+.editor-row label{flex:none;width:78px;font-size:11.5px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;}
+.editor-row input{flex:1;border:none;background:transparent;font-size:13.6px;color:var(--text);padding:4px 0;min-width:0;}
+.editor-row input:focus{outline:none;}
+.editor-row.align-top{align-items:flex-start;}
+.editor-row.align-top label{padding-top:6px;}
+
+/* recipients generated-from row */
+.source-row{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:10px;}
+.source-row-label{font-size:11px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.03em;}
+.source-chip{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--surface-sunken);color:var(--text-secondary);}
+
+/* recipient chip editor (Gmail-style) */
+.recipients-editor{flex:1;display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 0;min-width:0;}
+.recipient-chip{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 6px 4px 10px;border-radius:20px;
+  background:var(--accent-soft);color:var(--accent);font-size:12.5px;font-weight:600;white-space:nowrap;
+}
+.recipient-chip.invalid{background:var(--red-soft);color:var(--red);}
+.recipient-chip-remove{
+  display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;
+  border:none;background:rgba(0,0,0,.08);color:inherit;flex:none;padding:0;
+}
+.recipient-chip-remove svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.6;}
+.recipient-chip-remove:hover{background:rgba(0,0,0,.18);}
+#recipientsInput{flex:1;min-width:140px;border:none;background:transparent;font-size:13.6px;color:var(--text);padding:4px 2px;}
+#recipientsInput:focus{outline:none;}
+.editor-body-wrap{padding:16px;}
+.editor-body{
+  width:100%;min-height:260px;border:none;background:transparent;resize:vertical;
+  font-size:13.6px;line-height:1.65;color:var(--text);font-family:var(--font-ui);
+}
+.editor-body:focus{outline:none;}
+
+/* AI actions */
+.ai-actions{display:flex;gap:10px;margin:16px 0;flex-wrap:wrap;}
+.ai-btn{
+  display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:9px;
+  font-size:13.2px;font-weight:600;border:1px solid var(--accent);
+  background:var(--accent-soft);color:var(--accent);transition:background .15s,transform .1s,opacity .15s;
+}
+.ai-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.ai-btn:hover{background:color-mix(in srgb, var(--accent) 22%, var(--accent-soft));}
+.ai-btn:active{transform:scale(.97);}
+.ai-btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.ai-btn.spinning svg{animation:spin .7s linear infinite;}
+
+.editor-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap;}
+
+/* ============================================================
+   EMPTY / ERROR STATES
+   ============================================================ */
+.empty-state,.error-card{
+  background:var(--surface);border:1px dashed var(--border-strong);
+  border-radius:var(--radius-lg);padding:56px 24px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+.empty-state svg,.error-card svg{width:38px;height:38px;stroke:var(--text-tertiary);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.error-card svg{stroke:var(--red);}
+.empty-state h3,.error-card h3{font-size:16px;}
+.empty-state p,.error-card p{color:var(--text-secondary);font-size:13.5px;max-width:420px;}
+.error-card .btn{margin-top:6px;}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(10,11,16,.5);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;z-index:2000;padding:20px;
+  animation:overlayIn .15s ease;
+}
+[data-theme="dark"] .modal-overlay{background:rgba(0,0,0,.65);}
+.modal{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-lg);width:100%;max-width:580px;max-height:86vh;
+  display:flex;flex-direction:column;animation:modalIn .18s ease;
+}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--border);}
+.modal-header h3{font-size:16px;}
+.modal-close{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);border:none;background:transparent;}
+.modal-close svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;}
+.modal-close:hover{background:var(--surface-sunken);color:var(--text);}
+.modal-body{padding:20px 22px;overflow-y:auto;flex:1;}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 22px;border-top:1px solid var(--border);}
+@keyframes overlayIn{from{opacity:0;}to{opacity:1;}}
+@keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:translateY(0) scale(1);}}
+
+.preview-row{margin-bottom:14px;}
+.preview-label{font-size:10.5px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;font-weight:700;margin-bottom:4px;}
+.preview-value{font-size:13.3px;color:var(--text);line-height:1.5;}
+.preview-body{
+  white-space:pre-wrap;font-size:13.3px;line-height:1.65;color:var(--text);
+  background:var(--surface-sunken);border-radius:var(--radius);padding:14px;
+  border:1px solid var(--border);max-height:300px;overflow-y:auto;
+}
+.attachment-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--surface-sunken);border-radius:var(--radius-sm);font-size:12.8px;color:var(--text-tertiary);}
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+.toast-stack{position:fixed;bottom:22px;right:22px;z-index:3000;display:flex;flex-direction:column;gap:10px;max-width:340px;}
+.toast{
+  background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);
+  box-shadow:var(--shadow-lg);border-radius:var(--radius);padding:12px 14px;
+  display:flex;gap:10px;align-items:flex-start;animation:toastIn .22s ease;
+}
+.toast.success{border-left-color:var(--status-signed);}
+.toast.error{border-left-color:var(--red);}
+.toast.info{border-left-color:var(--accent);}
+.toast svg{width:16px;height:16px;flex:none;margin-top:1px;stroke-width:2;fill:none;stroke:currentColor;}
+.toast.success svg{color:var(--status-signed);}
+.toast.error svg{color:var(--red);}
+.toast.info svg{color:var(--accent);}
+.toast-text{font-size:12.8px;color:var(--text);line-height:1.45;}
+.toast-close{margin-left:auto;flex:none;background:none;border:none;color:var(--text-tertiary);cursor:pointer;padding:0;}
+.toast-close svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+@keyframes toastIn{from{opacity:0;transform:translateX(16px);}to{opacity:1;transform:translateX(0);}}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1100px){
+  .comm-layout{grid-template-columns:1fr;}
+  .list-col{position:static;}
+  .app-list{max-height:360px;}
+}
+@media (max-width:1000px){
+  .cards-grid{grid-template-columns:repeat(2,1fr);}
+  .detail-grid{grid-template-columns:1fr;}
+}
+@media (max-width:640px){
+  .topbar{padding:12px 16px;gap:10px;}
+  .brand-sub{display:none;}
+  .topbar-nav{gap:2px;}
+  .nav-link{padding:7px 9px;font-size:13px;}
+  .page{padding:22px 16px 48px;}
+  .cards-grid{grid-template-columns:1fr 1fr;}
+  .page-header{align-items:flex-start;}
+  .template-choice{flex-direction:column;}
+  .editor-row label{width:60px;}
+}
+</style>
+</head>
+<body>
+<script>
+/* Apply theme before first paint to avoid flash-of-wrong-theme */
+(function(){
+  try{
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  }catch(e){}
+})();
+</script>
+
+<nav class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="13" stroke="var(--accent)" stroke-width="2"/>
+      <path d="M16 3c3.6 3.4 5.6 8 5.6 13S19.6 25.6 16 29M16 3c-3.6 3.4-5.6 8-5.6 13S12.4 25.6 16 29" stroke="var(--accent)" stroke-width="1.4" opacity=".55"/>
+      <path d="M3 16h26" stroke="var(--accent)" stroke-width="1.4" opacity=".55"/>
+      <circle cx="16" cy="16" r="2.6" fill="var(--gold)"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">STU International Office</span>
+      <span class="brand-sub">Inter-Institutional Agreements</span>
+    </div>
+  </div>
+  <div class="topbar-nav">
+    <a href="statistics.html" class="nav-link">Statistics</a>
+    <a href="map.html" class="nav-link">Partner Map</a>
+    <a href="communication.html" class="nav-link active">Communication</a>
+  </div>
+  <div class="topbar-right">
+    <a class="admin-link" href="communication.html">Admin sign in</a>
+    <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1>Communication Center</h1>
+      <p class="page-sub">Review applications and send faculty or partner university emails in one place.</p>
+    </div>
+    <div class="page-actions">
+      <span id="lastUpdated" class="muted"></span>
+      <button id="refreshBtn" class="btn">
+        <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <section id="cardsSection" class="cards-grid" aria-label="Communication summary"></section>
+
+  <section id="mainSection" class="comm-layout" aria-label="Applications and email workspace">
+    <div class="list-col">
+      <div class="filter-card">
+        <div class="filter-card-head"><h3>Search</h3></div>
+        <div class="search-wrap" style="margin-top:10px;">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="University, applicant or email…" autocomplete="off">
+        </div>
+        <div class="segmented" id="filterSegmented">
+          <button class="segmented-btn active" data-filter="new">New Applications <span class="segmented-count" id="countNew">0</span></button>
+          <button class="segmented-btn" data-filter="signed">Signed Agreements <span class="segmented-count" id="countSigned">0</span></button>
+        </div>
+        <div class="date-filter">
+          <button type="button" class="date-filter-btn" id="dateFilterBtn">
+            <span id="dateFilterLabel">All dates</span>
+            <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="date-filter-panel hidden" id="dateFilterPanel">
+            <button type="button" class="date-filter-option active" data-range="all">All dates</button>
+            <button type="button" class="date-filter-option" data-range="today">Today</button>
+            <button type="button" class="date-filter-option" data-range="7">Last 7 days</button>
+            <button type="button" class="date-filter-option" data-range="30">Last 30 days</button>
+            <div class="date-filter-custom">
+              <input type="date" id="dateFilterFrom" aria-label="From date">
+              <input type="date" id="dateFilterTo" aria-label="To date">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="app-list-card">
+        <div id="appList" class="app-list"></div>
+      </div>
+    </div>
+
+    <div class="workspace-col">
+      <div id="workspaceEmpty" class="empty-state">
+        <svg viewBox="0 0 24 24"><path d="M3 12l3-8h12l3 8"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 12h5l1.5 3h5L16 12h5"/></svg>
+        <h3>Select an application</h3>
+        <p>Choose an application from the list on the left to see its details and prepare an email.</p>
+      </div>
+
+      <div id="workspaceContent" class="hidden">
+        <div id="detailCard" class="detail-card"></div>
+        <div class="email-card">
+          <div class="section-title">Email</div>
+          <div class="sender-row" id="senderRow">
+            <div class="sender-avatar" id="senderAvatar">MD</div>
+            <div class="sender-text">
+              <div class="sender-name" id="senderName">Michal Dudák</div>
+              <div class="sender-email" id="senderEmail">michal.dudak@stuba.sk</div>
+            </div>
+          </div>
+          <div id="templateChoice" class="template-choice"></div>
+          <div id="sourceRow" class="source-row hidden">
+            <span class="source-row-label">Recipients generated from:</span>
+            <span id="sourceChips"></span>
+          </div>
+          <div id="recipientsHint" class="field-hint" style="margin-bottom:10px;"></div>
+
+          <div class="editor-card">
+            <div class="editor-row align-top">
+              <label for="recipientsInput">To</label>
+              <div class="recipients-editor" id="recipientsEditor">
+                <span id="recipientsChips"></span>
+                <input type="text" id="recipientsInput" placeholder="Add recipient and press Enter">
+              </div>
+            </div>
+            <div class="editor-row" style="border-bottom:none;">
+              <label for="fieldSubject">Subject</label>
+              <input type="text" id="fieldSubject" placeholder="Subject line">
+            </div>
+            <div class="editor-body-wrap" style="border-top:1px solid var(--border);">
+              <textarea id="fieldBody" class="editor-body" placeholder="Email body…"></textarea>
+            </div>
+          </div>
+
+          <div class="ai-actions" id="aiActionsRow">
+            <button id="btnCreateDescription" class="ai-btn">
+              <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+              ✨ Create Description
+            </button>
+            <button id="btnGenerateFacultyEmail" class="ai-btn">
+              <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
+              ✨ Generate Faculty Email
+            </button>
+          </div>
+
+          <div class="editor-actions">
+            <button id="btnSaveDraft" class="btn">
+              <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              Save Draft
+            </button>
+            <button id="btnCopy" class="btn">
+              <svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
+            <button id="btnPreview" class="btn">
+              <svg viewBox="0 0 24 24"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>
+              Preview
+            </button>
+            <button id="btnSendEmail" class="btn btn-primary">
+              <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+              Send Email
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="errorSection"></section>
+</main>
+
+<!-- Preview modal -->
+<div id="previewModalOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <h3>Email preview</h3>
+      <button class="modal-close" id="previewModalClose"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-row"><div class="preview-label">To</div><div class="preview-value" id="previewRecipients"></div></div>
+      <div class="preview-row"><div class="preview-label">Subject</div><div class="preview-value" id="previewSubject"></div></div>
+      <div class="preview-row">
+        <div class="preview-label">Body</div>
+        <iframe id="previewFrame" title="Email preview" style="width:100%;min-height:360px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;"></iframe>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="previewCloseBtn">Close</button>
+      <button class="btn btn-primary" id="previewSendBtn">
+        <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+        Send Email
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Send modal -->
+<div id="sendModalOverlay" class="modal-overlay hidden">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <h3>Send email</h3>
+      <button class="modal-close" id="sendModalClose"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="preview-row"><div class="preview-label">Recipients</div><div class="preview-value" id="sendRecipients"></div></div>
+      <div class="preview-row"><div class="preview-label">Subject</div><div class="preview-value" id="sendSubject"></div></div>
+      <div class="preview-row">
+        <div class="preview-label">Attachments</div>
+        <div class="attachment-row"><span>No attachments</span></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="sendCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="sendConfirmBtn">
+        <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+        Send
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   CONFIG
+   ============================================================
+   This page talks only to the existing Google Apps Script API.
+   The backend is not modified — the frontend adapts to it.
+   Actions used: 'applications' (existing, shared with the other
+   pages), plus best-effort optional actions ('faculties',
+   'emailTemplates', 'sender', 'drafts', 'saveDraft', 'deleteDraft',
+   'sendEmail', 'ai'). Every optional action degrades gracefully to
+   a sensible local fallback if the backend doesn't recognize it —
+   the same resilient pattern used throughout statistics.html /
+   map.html.
+*/
+var API_BASE = "https://script.google.com/macros/s/AKfycbwrgoPNlVEGtdGamlAQDv8dsRWjH3u56cR7v9jiGEV1stJhH4mq_SmNLraV0fKE6VRU/exec";
+
+/* ============================================================
+   ICONS (inline, no external icon library)
+   ============================================================ */
+var ICONS = {
+  sun:      '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.4 4.4l1.8 1.8M17.8 17.8l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.4 19.6l1.8-1.8M17.8 6.2l1.8-1.8"/></svg>',
+  moon:     '<svg viewBox="0 0 24 24"><path d="M20 14.3A8.4 8.4 0 1 1 9.7 4a7 7 0 0 0 10.3 10.3Z"/></svg>',
+  alert:    '<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.4h.01"/></svg>',
+  inbox:    '<svg viewBox="0 0 24 24"><path d="M3 12l3-8h12l3 8"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 12h5l1.5 3h5L16 12h5"/></svg>',
+  newApp:   '<svg viewBox="0 0 24 24"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg>',
+  bell:     '<svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+  send:     '<svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>',
+  draft:    '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>',
+  building: '<svg viewBox="0 0 24 24"><path d="M4 21V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v16"/><path d="M13 21V9a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v12"/><path d="M8 8h.01M8 12h.01M8 16h.01"/></svg>',
+  pin:      '<svg viewBox="0 0 24 24"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8Z"/><circle cx="12" cy="10" r="2.6"/></svg>',
+  mail:     '<svg viewBox="0 0 24 24"><path d="M3 6h18v12H3Z"/><path d="M3 7l9 6 9-6"/></svg>',
+  check:    '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>'
+};
+
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+var themeToggle = document.getElementById('themeToggle');
+function paintThemeIcon(){
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = dark ? ICONS.sun : ICONS.moon;
+}
+themeToggle.addEventListener('click', function(){
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  paintThemeIcon();
+});
+paintThemeIcon();
+
+/* ============================================================
+   GENERIC API + NORMALIZATION HELPERS
+   (same resilient pattern used across the app: the backend's
+   exact JSON key names may vary, so every read goes through
+   pick(), which tries a list of likely key spellings.)
+   ============================================================ */
+function apiGet(action, params){
+  var url = new URL(API_BASE);
+  url.searchParams.set('action', action);
+  if (params) Object.keys(params).forEach(function(k){
+    if (params[k] !== undefined && params[k] !== null && params[k] !== '') url.searchParams.set(k, params[k]);
+  });
+  return fetch(url.toString(), { method:'GET' }).then(function(res){
+    if (!res.ok) throw new Error('The server responded with status ' + res.status + '.');
+    return res.json();
+  }).then(function(json){
+    if (json && json.error) throw new Error(json.error);
+    return json;
+  });
+}
+function apiPost(action, payload){
+  var body = Object.assign({ action:action }, payload || {});
+  return fetch(API_BASE, {
+    method:'POST',
+    headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+    body: JSON.stringify(body)
+  }).then(function(res){
+    if (!res.ok) throw new Error('The server responded with status ' + res.status + '.');
+    return res.text();
+  }).then(function(text){
+    var json;
+    try { json = JSON.parse(text); } catch(e){ json = { result:text }; }
+    if (json && json.error) throw new Error(json.error);
+    return json;
+  });
+}
+function pick(obj, keys){
+  if (!obj || typeof obj !== 'object') return undefined;
+  for (var i=0;i<keys.length;i++){ var k = keys[i]; if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k]; }
+  var lower = {};
+  Object.keys(obj).forEach(function(kk){ lower[kk.toLowerCase().replace(/[\s_]/g,'')] = obj[kk]; });
+  for (var j=0;j<keys.length;j++){
+    var norm = keys[j].toLowerCase().replace(/[\s_]/g,'');
+    if (lower[norm] !== undefined && lower[norm] !== null && lower[norm] !== '') return lower[norm];
+  }
+  return undefined;
+}
+function splitMulti(value){
+  if (value === undefined || value === null) return [];
+  if (Array.isArray(value)) return value.map(function(v){return String(v).trim();}).filter(Boolean);
+  return String(value).split(',').map(function(v){return v.trim();}).filter(Boolean);
+}
+/* Like splitMulti, but also breaks on newlines first (the Overlaps / ISCED
+   codes column tends to contain one entry per line, e.g. "0732 Civil
+   Engineering\n0714 Architecture"; falls back to comma-splitting otherwise). */
+function splitLines(value){
+  if (value === undefined || value === null) return [];
+  if (Array.isArray(value)) return value.map(function(v){return String(v).trim();}).filter(Boolean);
+  var s = String(value);
+  var parts = /\r|\n/.test(s) ? s.split(/\r?\n/) : s.split(',');
+  return parts.map(function(v){ return v.trim(); }).filter(Boolean);
+}
+function extractList(raw){
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw.applications)) return raw.applications;
+  if (Array.isArray(raw.data)) return raw.data;
+  if (Array.isArray(raw.rows)) return raw.rows;
+  if (Array.isArray(raw.items)) return raw.items;
+  if (Array.isArray(raw.results)) return raw.results;
+  return [];
+}
+function escapeHtml(s){ var d=document.createElement('div'); d.textContent=(s===undefined||s===null)?'':String(s); return d.innerHTML; }
+function meaningful(v){
+  if (v === undefined || v === null) return false;
+  var s = String(v).trim();
+  if (!s) return false;
+  var low = s.toLowerCase();
+  var blanks = ['-','–','n/a','na','none','not required','no requirement','no requirements','not applicable','i am not sure'];
+  return blanks.indexOf(low) === -1;
+}
+function naturalJoinSk(list){
+  if (!list.length) return '';
+  if (list.length === 1) return list[0];
+  return list.slice(0,-1).join(', ') + ' a ' + list[list.length-1];
+}
+
+function classifyStatus(raw){
+  var s = (raw||'').toString().trim();
+  if (!s) return 'new';
+  var low = s.toLowerCase();
+  if (low.indexOf('podp') !== -1 || low.indexOf('sign') !== -1) return 'signed';
+  if (low.indexOf('zamiet') !== -1 || low.indexOf('reject') !== -1) return 'rejected';
+  if (low.indexOf('nová') !== -1 || low.indexOf('nova') !== -1 || low === 'new') return 'new';
+  if (low.indexOf('pracuje') !== -1 || low.indexOf('poslan') !== -1 || low.indexOf('progress') !== -1 || low.indexOf('pending') !== -1) return 'in_progress';
+  return 'unknown';
+}
+function parseDate(v){
+  if (v === undefined || v === null || v === '') return null;
+  if (typeof v === 'number') return sheetsSerialToDate(v);
+  var s = String(v).trim();
+  if (/^\d+(\.\d+)?$/.test(s)){
+    var num = parseFloat(s);
+    if (num > 20000 && num < 60000) return sheetsSerialToDate(num);
+  }
+  var d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+function sheetsSerialToDate(num){
+  var ms = Math.round((num - 25569) * 86400 * 1000);
+  var d = new Date(ms);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/* ============================================================
+   FACULTY / MOBILITY / LEVEL DEFINITIONS
+   (labels identical to map.html, extended with coordinator
+   e-mails from the Faculties reference sheet — used as the
+   local fallback if ?action=faculties isn't available)
+   ============================================================ */
+var FACULTY_DIRECTORY = {
+  SvF:   { label:'Faculty of Civil Engineering (SvF)',                                    coordinator:'', email:'' },
+  SjF:   { label:'Faculty of Mechanical Engineering (SjF)',                                coordinator:'', email:'' },
+  FEI:   { label:'Faculty of Electrical Engineering and Information Technology (FEI)',     coordinator:'John Smith', email:'fei@stuba.sk' },
+  FCHPT: { label:'Faculty of Chemical and Food Technology (FCHPT)',                        coordinator:'', email:'' },
+  FAD:   { label:'Faculty of Architecture and Design (FAD)',                               coordinator:'Jane Doe', email:'fad@stuba.sk' },
+  MTF:   { label:'Faculty of Materials Science and Technology (MTF)',                      coordinator:'', email:'' },
+  FIIT:  { label:'Faculty of Informatics and Information Technologies (FIIT)',              coordinator:'Michal Dudák', email:'michal.dudak@stuba.sk' },
+  UM:    { label:'Institute of Management (UM)',                                           coordinator:'', email:'' }
+};
+var MOBILITY_DEFS = [
+  { code:'SMS', label:'SMS — Student Mobility for Studies' },
+  { code:'SMT', label:'SMT — Student Mobility for Traineeships' },
+  { code:'STA', label:'STA — Staff Mobility for Teaching' },
+  { code:'STT', label:'STT — Staff Mobility for Training' },
+  { code:'BIP', label:'BIP' }
+];
+var MOBILITY_LABEL_BY_CODE = {};
+MOBILITY_DEFS.forEach(function(m){ MOBILITY_LABEL_BY_CODE[m.code] = m.label; });
+var MOBILITY_SK = {
+  SMS:'študentské mobility', SMT:'stážové mobility', STA:'zamestnanecké mobility (výučba)',
+  STT:'zamestnanecké mobility (tréning)', BIP:'Blended Intensive Programmes (BIP)'
+};
+var LEVEL_SK = {
+  Bachelor:'bakalárskom stupni štúdia', Master:'inžinierskom stupni štúdia', PhD:'doktorandskom stupni štúdia'
+};
+/* Bare forms (no trailing "stupni štúdia" / no case suffix) — used by the
+   Faculty Coordinators email template, which supplies its own suffix text. */
+var LEVEL_SK_BARE = {
+  Bachelor:'bakalárskom', Master:'inžinierskom', PhD:'doktorandskom'
+};
+var MOBILITY_SK_LABEL = {
+  SMS:'Študentské mobility', SMT:'Stážové mobility', STA:'Zamestnanecké mobility (výučba)',
+  STT:'Zamestnanecké mobility (tréning)', BIP:'Blended Intensive Programmes (BIP)'
+};
+
+function extractFacultyCodes(str){
+  return splitMulti(str).map(function(s){
+    var m = s.match(/\(([^)]+)\)/);
+    var code = m ? m[1].trim() : s.trim();
+    return code.toUpperCase();
+  }).filter(Boolean);
+}
+function extractMobilityCodes(str, bipFlag){
+  var text = String(str || '');
+  var found = [];
+  ['SMS','SMT','STA','STT','BIP'].forEach(function(code){
+    if (new RegExp('\\b' + code + '\\b', 'i').test(text)) found.push(code);
+  });
+  if (bipFlag && /^y|áno|ano/i.test(String(bipFlag).trim()) && found.indexOf('BIP') === -1) found.push('BIP');
+  return found;
+}
+function extractLevels(str){
+  return splitMulti(str).map(function(s){
+    var low = s.toLowerCase();
+    if (low.indexOf('bachelor') !== -1) return 'Bachelor';
+    if (low.indexOf('master') !== -1) return 'Master';
+    if (low.indexOf('phd') !== -1 || low.indexOf('doctor') !== -1) return 'PhD';
+    return s;
+  }).filter(Boolean);
+}
+
+/* Merge a live ?action=faculties response into FACULTY_DIRECTORY.
+   Tolerates rows shaped like the Faculties reference sheet
+   (Faculty / Coordinator / Email columns). Falls back silently
+   to the local table above if this call fails or returns nothing. */
+function loadFacultyDirectory(){
+  return apiGet('faculties').then(function(raw){
+    var rows = extractList(raw);
+    if (!rows.length && raw && typeof raw === 'object') rows = Object.keys(raw).map(function(k){ return raw[k]; });
+    rows.forEach(function(row){
+      var fullLabel = pick(row, ['Faculty','faculty','name','Name']);
+      var coordinator = pick(row, ['Coordinator','coordinator']);
+      var email = pick(row, ['Email','email']);
+      if (!fullLabel) return;
+      var m = String(fullLabel).match(/\(([^)]+)\)/);
+      var code = m ? m[1].trim().toUpperCase() : null;
+      if (!code) return;
+      if (!FACULTY_DIRECTORY[code]) FACULTY_DIRECTORY[code] = { label:fullLabel, coordinator:'', email:'' };
+      if (fullLabel) FACULTY_DIRECTORY[code].label = fullLabel;
+      if (coordinator) FACULTY_DIRECTORY[code].coordinator = coordinator;
+      if (email) FACULTY_DIRECTORY[code].email = email;
+    });
+  }).catch(function(){ /* keep local fallback table — non-fatal */ });
+}
+
+/* Best-effort: if the backend exposes ?action=sender (or similar),
+   use it to fill the "From" row. Otherwise the static default
+   already in the markup (Michal Dudák) is left untouched. */
+function loadSenderInfo(){
+  return apiGet('sender').then(function(raw){
+    var row = extractList(raw)[0] || raw;
+    var name = pick(row, ['name','Name','senderName']);
+    var email = pick(row, ['email','Email','senderEmail']);
+    if (name) document.getElementById('senderName').textContent = name;
+    if (email) document.getElementById('senderEmail').textContent = email;
+    if (name){
+      var initials = String(name).trim().split(/\s+/).map(function(p){ return p[0]; }).slice(0,2).join('').toUpperCase();
+      if (initials) document.getElementById('senderAvatar').textContent = initials;
+    }
+  }).catch(function(){ /* keep the static default sender — non-fatal */ });
+}
+
+/* ============================================================
+   EMAIL TEMPLATES (fallback defaults, mirroring the tone of the
+   EmailTemplate reference sheet: Slovak for faculty coordinators,
+   English for the partner university). A live ?action=emailTemplates
+   call can override these if the backend exposes it.
+   ============================================================ */
+var EMAIL_TEMPLATES = { faculty:null, partner:null };
+function loadEmailTemplates(){
+  return apiGet('emailTemplates').then(function(raw){
+    var rows = extractList(raw);
+    rows.forEach(function(row){
+      var key = pick(row, ['Template','template']);
+      var subject = pick(row, ['Subject','subject']);
+      var body = pick(row, ['Body','body']);
+      if (!key) return;
+      var norm = String(key).toLowerCase();
+      if (norm.indexOf('partner') !== -1) EMAIL_TEMPLATES.partner = { subject:subject, body:body };
+      else if (norm.indexOf('faculty') !== -1) EMAIL_TEMPLATES.faculty = { subject:subject, body:body };
+    });
+  }).catch(function(){ /* keep generated fallback templates — non-fatal */ });
+}
+
+/* Best-effort: restores any drafts previously saved via ?action=saveDraft
+   (persisted server-side in the "Drafts" sheet) into state.drafts, keyed
+   by applicationId, so a saved draft survives a page refresh / new
+   session rather than only living in memory for the current tab. */
+function loadDrafts(){
+  return apiGet('drafts').then(function(raw){
+    var rows = extractList(raw);
+    rows.forEach(function(row){
+      var appId = pick(row, ['applicationId','ApplicationId','id']);
+      if (!appId) return;
+      var recipientsRaw = pick(row, ['recipients','Recipients']) || '';
+      var template = pick(row, ['template','Template']) || 'faculty';
+      state.drafts[String(appId)] = {
+        template: template,
+        recipients: splitMulti(recipientsRaw),
+        subject: pick(row, ['subject','Subject']) || '',
+        body: pick(row, ['body','Body']) || ''
+      };
+    });
+  }).catch(function(){ /* server-side draft storage unavailable — session drafts still work */ });
+}
+
+/* ============================================================
+   HTML SIGNATURE
+   ------------------------------------------------------------
+   Stored separately from the editable body. Never shown as raw
+   HTML in the textarea — appended automatically to the HTML
+   version of the email at preview time and at send time.
+   ============================================================ */
+var SIGNATURE_HTML =
+'<table style="padding:0;margin:0;width:530px;font-size:12pt;font-family:Calibri,Arial,sans-serif;color:#000;border-collapse:collapse;" cellspacing="0" cellpadding="0" border="0">' +
+'<tr><td rowspan="3" style="width:140px;vertical-align:top;"><img width="120" src="https://www.stuba.sk/buxus/images/stu/informacie_pre/media/logo/stu.png" alt="STU logo"></td>' +
+'<td colspan="2"><b>Mgr. Michal Ďuďák</b></td></tr>' +
+'<tr><td colspan="2">Erasmus+ institutional coordinator</td></tr>' +
+'<tr><td colspan="2">&nbsp;</td></tr>' +
+'<tr><td></td><td colspan="2">Department of International Relations</td></tr>' +
+'<tr><td></td><td colspan="2">Rector\'s Office</td></tr>' +
+'<tr><td></td><td colspan="2">Slovak University of Technology in Bratislava</td></tr>' +
+'<tr><td colspan="3">&nbsp;</td></tr>' +
+'<tr><td></td><td style="color:#971d31;"><b>T</b>:</td><td>+421 917 669 401</td></tr>' +
+'<tr><td></td><td style="color:#971d31;"><b>E</b>:</td><td><a href="mailto:michal.dudak@stuba.sk">michal.dudak@stuba.sk</a></td></tr>' +
+'<tr><td colspan="3">&nbsp;</td></tr>' +
+'<tr><td></td><td style="color:#971d31;"><b>A</b>:</td><td>Vazovova 5<br>812 43 Bratislava<br>Slovak Republic</td></tr>' +
+'<tr><td></td><td style="color:#971d31;"><b>W</b>:</td><td><a href="https://www.stuba.sk">www.stuba.sk</a></td></tr>' +
+'</table>';
+
+/* Converts the plain-text editor body into HTML paragraphs
+   (blank line = new paragraph, single newline = <br>). */
+function bodyTextToHtml(text){
+  var paragraphs = String(text || '').replace(/\r\n/g,'\n').split(/\n{2,}/);
+  return paragraphs.map(function(p){
+    return '<p style="margin:0 0 14px 0;">' + escapeHtml(p).replace(/\n/g,'<br>') + '</p>';
+  }).join('');
+}
+/* Full HTML email = editable body (as HTML) + the fixed signature,
+   wrapped in a document so it can be dropped straight into an
+   iframe for preview or sent as htmlBody. */
+function buildHtmlEmail(bodyText){
+  return '<div style="font-family:Calibri,Arial,sans-serif;font-size:12pt;color:#000;">' +
+    bodyTextToHtml(bodyText) +
+    '<div style="margin-top:18px;">' + SIGNATURE_HTML + '</div>' +
+  '</div>';
+}
+function buildHtmlDocument(bodyText){
+    return buildHtmlEmail(bodyText);
+}
+
+function normalizeApplication(a, idx){
+  var university = pick(a, [
+    'Name of foreign instituion', 'Name of foreign institution',
+    'foreignUniversity', 'partnerUniversity',
+    'Your home university', 'homeUniversity', 'university', 'University'
+  ]);
+  var country = pick(a, ['Country of foreign institution', 'country', 'Country']);
+  var first = pick(a, ['First name', 'firstName']);
+  var last  = pick(a, ['Last name', 'lastName']);
+  var applicant = pick(a, ['applicant','fullName','Applicant']) || [first,last].filter(Boolean).join(' ').trim();
+  var email = pick(a, ['E-mailová adresa', 'Email address', 'email', 'Email']);
+  var position = pick(a, ['Your current position 2', 'Your current position', 'position']);
+  var reason = pick(a, [
+    'Why are you interested in concluding the IIA with foreign university? Please specify the purpose of the IIA (i.e. for which types of mobility it is intended).',
+    'Why are you / your university interested in concluding the IIA with STU?',
+    'Reason for cooperation', 'reason'
+  ]);
+  var facultyRaw = pick(a, [
+    'With which faculty of STU would you like to conclude the IIA?', 'faculty2', 'stuFaculty2',
+    'With which faculty would you like to conclude the IIA?', 'faculty', 'Faculty', 'stuFaculty'
+  ]);
+  var mobilityRaw = pick(a, [
+    'What kind of mobility would you like to include in the agreement? 2', 'mobility2',
+    'What kind of mobility would you like to include in the agreement?', 'mobility', 'Mobility', 'mobilityType'
+  ]);
+  var bipFlag = pick(a, ['Would you like to include BIPs in the agreement?', 'bip', 'BIP']);
+  var levelRaw = pick(a, [
+    'If applicable, what levels of study you want to include in the agreement? (For long term mobilities) 2', 'level2', 'studyLevel2',
+    'If applicable, what levels of study you want to include in the agreement? (For long term mobilities)', 'studyLevel', 'level', 'Study level'
+  ]);
+  var langStudents = pick(a, ['What is required level of English at your institution for incoming students?', 'English requirement for students', 'englishStudents']);
+  var langStaff = pick(a, ['What is required level of English at your institution for incoming employees?', 'English requirement for staff', 'englishStaff']);
+  var langOther = pick(a, ['If your institution requires knowledge of a language other than English for incoming staff and students, please specify:', 'Other language requirements', 'otherLanguage']);
+  var contactName = pick(a, ['Name of person responsible for signing the inter institutional agreements at your institution?', 'contactName', 'contactPerson']);
+  var contactEmail = pick(a, ['E-mail of person responsible for signing the inter institutional agreements at your institution?', 'contactEmail', 'Contact email']);
+  var erasmusCode = pick(a, ['If applicable, Eramus code of foreign instituion', 'Foreign Erasmus Code', 'foreignErasmusCode', 'erasmusCode']);
+  var overlapsRaw = pick(a, ['Overlaps / ISCED codes', 'foreignOverlap', 'overlaps', 'Overlaps']);
+  var status = pick(a, ['Status', 'status']);
+  var date = pick(a, ['Časová pečiatka', 'Timestamp', 'timestamp', 'date', 'Date']);
+
+  return {
+    id: String(pick(a, ['id', 'ID', 'rowIndex', 'row']) || ('row-' + idx)),
+    university: (university || '').toString().trim(),
+    country: (country || '').toString().trim(),
+    applicant: applicant || '—',
+    firstName: (first || (applicant || '').split(' ')[0] || '').toString().trim(),
+    email: (email || '').toString().trim(),
+    position: (position || '').toString().trim(),
+    reason: (reason || '').toString().trim(),
+    facultyCodes: extractFacultyCodes(facultyRaw),
+    mobilityCodes: extractMobilityCodes(mobilityRaw, bipFlag),
+    levels: extractLevels(levelRaw),
+    languageStudents: (langStudents || '').toString().trim(),
+    languageStaff: (langStaff || '').toString().trim(),
+    languageOther: (langOther || '').toString().trim(),
+    contactName: (contactName || '').toString().trim(),
+    contactEmail: (contactEmail || '').toString().trim(),
+    erasmusCode: (erasmusCode || '').toString().trim(),
+    overlaps: splitLines(overlapsRaw),
+    status: (status || '').toString().trim(),
+    statusKey: classifyStatus(status),
+    dateObj: parseDate(date),
+    aiDescription: null
+  };
+}
+function isRealApplication(a){
+  return !!(a.university || a.email || (a.applicant && a.applicant !== '—'));
+}
+
+/* ============================================================
+   EMAIL TEMPLATE ENGINE
+   ============================================================ */
+function facultyLabel(code){ var d = FACULTY_DIRECTORY[code]; return d ? d.label : code; }
+function facultySentence(app){
+  return naturalJoinSk(app.facultyCodes.map(function(c){ return facultyLabel(c); }));
+}
+function mobilitySentence(app){
+  return naturalJoinSk(app.mobilityCodes.map(function(c){ return MOBILITY_SK[c] || c; }));
+}
+/* Comma-joined list of mobility types, in the capitalized "list item" form
+   used by the redesigned Faculty Coordinators template (e.g. "Študentské
+   mobility, Zamestnanecké mobility (výučba)"), rather than a natural-language
+   sentence. */
+function mobilityListText(app){
+  return app.mobilityCodes.map(function(c){ return MOBILITY_SK_LABEL[c] || c; }).join(', ');
+}
+/* The study-level sentence ("...pre študentov na bakalárskom a inžinierskom
+   stupni štúdia.") only makes sense for student mobilities — it is omitted
+   entirely when only staff mobility (STA/STT) was requested. */
+function studyLevelsText(app){
+  var hasStudentMobility = app.mobilityCodes.indexOf('SMS') !== -1 || app.mobilityCodes.indexOf('SMT') !== -1;
+  if (!hasStudentMobility) return '';
+  var labels = app.levels.map(function(l){ return LEVEL_SK_BARE[l] || l; }).filter(Boolean);
+  return labels.length ? naturalJoinSk(labels) : '';
+}
+function levelSentence(app){
+  var labels = app.levels.map(function(l){ return LEVEL_SK[l] || l; });
+  return labels.length ? 'na ' + naturalJoinSk(labels) : '';
+}
+function languageSentence(app){
+  var parts = [];
+  if (meaningful(app.languageStudents)) parts.push('študentov: ' + app.languageStudents);
+  if (meaningful(app.languageStaff)) parts.push('zamestnancov: ' + app.languageStaff);
+  var sentence = '';
+  if (parts.length) sentence = 'Požadovaná úroveň anglického jazyka – ' + parts.join(', ') + '.';
+  if (meaningful(app.languageOther)) sentence += (sentence ? ' ' : '') + 'Ďalšie jazykové požiadavky: ' + app.languageOther + '.';
+  return sentence;
+}
+function defaultTemplateFor(app){
+  return app.statusKey === 'signed' ? 'partner' : 'faculty';
+}
+function buildFacultyRecipients(app){
+  var emails = [];
+  var missing = [];
+  app.facultyCodes.forEach(function(code){
+    var d = FACULTY_DIRECTORY[code];
+    if (d && d.email){ if (emails.indexOf(d.email) === -1) emails.push(d.email); }
+    else { missing.push(code); }
+  });
+  return { emails:emails, missing:missing };
+}
+function buildPartnerRecipients(app){
+  var email = app.contactEmail || app.email;
+  return { emails: email ? [email] : [], missing: email ? [] : ['contact'] };
+}
+function buildSubject(app, templateKey){
+  if (templateKey === 'partner') return 'Inter-Institutional Agreement Request Received';
+  if (EMAIL_TEMPLATES.faculty && templateKey === 'faculty' && EMAIL_TEMPLATES.faculty.subject) return EMAIL_TEMPLATES.faculty.subject + ' – ' + (app.university || '');
+  return 'Žiadosť o stanovisko k Inter-Institutional Agreement – ' + (app.university || '');
+}
+/* Redesigned Faculty Coordinators email. Only the "reason for cooperation"
+   paragraph (descriptionText) may come from the AI — every other line is
+   assembled here directly from the Google Forms data on `app`, per the
+   IMPORTANT LOGIC requirement that the AI never invents facts. */
+function buildFacultyBody(app, descriptionText){
+  var description = (descriptionText !== undefined ? descriptionText : (app.aiDescription || app.reason)) || '—';
+  var descClean = description.replace(/\.+\s*$/, ''); // trailing period stripped so we control punctuation below
+
+  var lines = [];
+  lines.push('Dobrý deň,');
+  lines.push('');
+
+  var intro = 'Univerzita ' + (app.university || '—') + ', ' + (app.country || '—') +
+    ' prejavila záujem podpísať s Vašou fakultou Erasmus+ medzi-inštitucionálnu dohodu. ' +
+    'Ako dôvod záujmu o spoluprácu uviedli: ' + descClean + '.';
+
+  var mobText = mobilitySentence(app);
+  if (mobText){
+    var levels = studyLevelsText(app);
+    intro += ' Konkrétne majú záujem o ' + mobText + (levels ? ' pre študentov na ' + levels + ' stupni štúdia.' : '.');
+  }
+  lines.push(intro);
+
+  if (app.overlaps && app.overlaps.length){
+    lines.push('');
+    lines.push('Prieniky našli hlavne v týchto odboroch: ' + app.overlaps.join(', ') + '.');
+  }
+
+  if (meaningful(app.languageOther)){
+    lines.push('');
+    lines.push('V formulári na spoluprácu sme sa aj pýtali, či ich univerzita vyžaduje pre incoming študentov znalosť iných jazykov ako angličtiny. Uviedli v ňom, že „' + app.languageOther + '“.');
+  }
+
+  lines.push('');
+  lines.push('Ak by ste o túto spoluprácu mali záujem, dajte mi prosím vedieť v akom rozsahu. Prosím informujte ma aj v prípade, že o spoluprácu záujem nemáte.');
+  lines.push('');
+  lines.push('Ďakujem,');
+  lines.push('');
+  lines.push('S pozdravom,');
+  lines.push('Michal Ďuďák');
+  return lines.join('\n');
+}
+function buildPartnerBody(app){
+  var firstName = app.firstName || app.applicant || 'Sir/Madam';
+  var lines = [];
+  lines.push('Dear ' + firstName + ',');
+  lines.push('');
+  lines.push('Thank you for submitting your Inter-Institutional Agreement request form.');
+  lines.push('');
+  lines.push('We will now forward the information you provided to the relevant faculties and departments at the Slovak University of Technology in Bratislava in order to assess potential academic cooperation.');
+  lines.push('');
+  lines.push('If our faculties express interest in the proposed collaboration, we will contact you to begin preparing the Inter-Institutional Agreement.');
+  lines.push('');
+  lines.push('Thank you for your interest in cooperating with the Slovak University of Technology in Bratislava. We appreciate your patience during the internal evaluation process.');
+  lines.push('');
+  lines.push('Kind regards,');
+  lines.push('Michal Ďuďák');
+  return lines.join('\n');
+}
+function composeEmail(app, templateKey){
+  var recipientInfo = templateKey === 'partner' ? buildPartnerRecipients(app) : buildFacultyRecipients(app);
+  return {
+    recipientsArr: recipientInfo.emails.slice(),
+    recipients: recipientInfo.emails.join(', '),
+    missing: recipientInfo.missing,
+    subject: buildSubject(app, templateKey),
+    body: templateKey === 'partner' ? buildPartnerBody(app) : buildFacultyBody(app),
+    sourceFaculties: templateKey === 'faculty' ? app.facultyCodes.slice() : []
+  };
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var state = {
+  apps: [],
+  visibleApps: [],
+  activeFilter: 'new',
+  searchQuery: '',
+  dateRange: { key:'all', from:null, to:null },
+  selectedId: null,
+  activeTemplate: 'faculty',
+  recipients: [],        // current chip-editor recipient list for the open application
+  currentDescriptionText: '',// exact text currently inserted as the "reason for cooperation" paragraph (for targeted replace)
+  drafts: {}   // in-memory this session: id -> { template, recipients (array), subject, body }
+};
+
+/* ============================================================
+   TOASTS
+   ============================================================ */
+var toastStack = document.getElementById('toastStack');
+var toastSeq = 0;
+function showToast(type, message){
+  var id = 'toast-' + (toastSeq++);
+  var icon = type === 'error' ? ICONS.alert : (type === 'success' ? ICONS.check : ICONS.bell);
+  var el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.id = id;
+  el.innerHTML = icon +
+    '<div class="toast-text">' + escapeHtml(message) + '</div>' +
+    '<button class="toast-close" aria-label="Dismiss">' + '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>' + '</button>';
+  toastStack.appendChild(el);
+  el.querySelector('.toast-close').addEventListener('click', function(){ removeToast(id); });
+  setTimeout(function(){ removeToast(id); }, 5200);
+}
+function removeToast(id){
+  var el = document.getElementById(id);
+  if (el && el.parentNode) el.parentNode.removeChild(el);
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+var previewOverlay = document.getElementById('previewModalOverlay');
+var sendOverlay = document.getElementById('sendModalOverlay');
+function openModal(overlay){ overlay.classList.remove('hidden'); }
+function closeModal(overlay){ overlay.classList.add('hidden'); }
+document.getElementById('previewModalClose').addEventListener('click', function(){ closeModal(previewOverlay); });
+document.getElementById('previewCloseBtn').addEventListener('click', function(){ closeModal(previewOverlay); });
+document.getElementById('sendModalClose').addEventListener('click', function(){ closeModal(sendOverlay); });
+document.getElementById('sendCancelBtn').addEventListener('click', function(){ closeModal(sendOverlay); });
+[previewOverlay, sendOverlay].forEach(function(ov){
+  ov.addEventListener('click', function(e){ if (e.target === ov) closeModal(ov); });
+});
+
+/* ============================================================
+   STAT CARDS (KPIs)
+   ============================================================ */
+var cardsSection = document.getElementById('cardsSection');
+var KPI_DEFS = [
+  { key:'newCount',    label:'New Applications',                icon:'newApp',   varc:'--status-new' },
+  { key:'readyNotify',  label:'Ready to Notify Faculties',       icon:'bell',     varc:'--amber' },
+  { key:'signedReady', label:'Signed Agreements Ready to Send', icon:'send',     varc:'--status-signed' },
+  { key:'draftCount',  label:'Draft Emails',                    icon:'draft',    varc:'--text-tertiary' }
+];
+function animateValue(el, to){
+  var startTime = null; var duration = 750;
+  function tick(now){
+    if (startTime===null) startTime = now;
+    var progress = Math.min((now-startTime)/duration, 1);
+    var eased = 1-Math.pow(1-progress,3);
+    el.textContent = Math.round(to*eased).toLocaleString();
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function computeKpis(){
+  var newApps = state.apps.filter(function(a){ return a.statusKey === 'new'; });
+  var signedApps = state.apps.filter(function(a){ return a.statusKey === 'signed'; });
+  return {
+    newCount: newApps.length,
+    readyNotify: newApps.filter(function(a){ return a.facultyCodes.length > 0; }).length,
+    signedReady: signedApps.length,
+    draftCount: Object.keys(state.drafts).length
+  };
+}
+function renderCards(){
+  var kpis = computeKpis();
+  cardsSection.innerHTML = KPI_DEFS.map(function(d){
+    return '<div class="stat-card">' +
+      '<div class="stat-icon" style="color:var(' + d.varc + ');background:color-mix(in srgb, var(' + d.varc + ') 14%, transparent)">' + ICONS[d.icon] + '</div>' +
+      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + d.label + '</span></div>' +
+    '</div>';
+  }).join('');
+  KPI_DEFS.forEach(function(d){ animateValue(document.getElementById('val-'+d.key), kpis[d.key]); });
+}
+function showSkeletons(){
+  cardsSection.innerHTML = KPI_DEFS.map(function(){ return '<div class="skeleton skeleton-card"></div>'; }).join('');
+  appList.innerHTML = [0,1,2,3,4].map(function(){ return '<div class="skeleton skeleton-row"></div>'; }).join('');
+}
+
+/* ============================================================
+   APPLICATION LIST (sidebar)
+   ============================================================ */
+var appList = document.getElementById('appList');
+var searchInput = document.getElementById('searchInput');
+var filterSegmented = document.getElementById('filterSegmented');
+var countNewEl = document.getElementById('countNew');
+var countSignedEl = document.getElementById('countSigned');
+
+var STAGE_LABELS = {
+  new: 'New — awaiting faculty routing',
+  in_progress: 'In progress',
+  signed: 'Signed — ready to notify partner',
+  rejected: 'Rejected',
+  unknown: 'Other'
+};
+var STATUS_BADGE_CLASS = { new:'badge-new', in_progress:'badge-progress', signed:'badge-signed', rejected:'badge-rejected', unknown:'badge-progress' };
+
+function stageLabel(app){ return app.status || STAGE_LABELS[app.statusKey] || 'Unknown'; }
+
+function renderCounts(){
+  countNewEl.textContent = String(state.apps.filter(function(a){ return a.statusKey === 'new'; }).length);
+  countSignedEl.textContent = String(state.apps.filter(function(a){ return a.statusKey === 'signed'; }).length);
+}
+
+function startOfDay(d){ var x = new Date(d); x.setHours(0,0,0,0); return x; }
+function endOfDay(d){ var x = new Date(d); x.setHours(23,59,59,999); return x; }
+function appMatchesDateRange(a){
+  var r = state.dateRange;
+  if (!r || r.key === 'all') return true;
+  if (!a.dateObj) return false;
+  var t = a.dateObj.getTime();
+  if (r.key === 'today') return t >= startOfDay(new Date()).getTime() && t <= endOfDay(new Date()).getTime();
+  if (r.key === '7' || r.key === '30'){
+    var days = parseInt(r.key, 10);
+    var from = startOfDay(new Date()); from.setDate(from.getDate() - (days - 1));
+    return t >= from.getTime() && t <= endOfDay(new Date()).getTime();
+  }
+  if (r.key === 'custom'){
+    if (r.from && t < startOfDay(r.from).getTime()) return false;
+    if (r.to && t > endOfDay(r.to).getTime()) return false;
+    return true;
+  }
+  return true;
+}
+function onFilterChange(){
+  state.visibleApps = state.apps.filter(function(a){
+    if (state.activeFilter === 'new' && a.statusKey !== 'new') return false;
+    if (state.activeFilter === 'signed' && a.statusKey !== 'signed') return false;
+    if (!appMatchesDateRange(a)) return false;
+    if (state.searchQuery){
+      var q = state.searchQuery;
+      var hay = (a.university + ' ' + a.applicant + ' ' + a.email).toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+  renderList();
+}
+
+function renderList(){
+  if (!state.visibleApps.length){
+    appList.innerHTML = '<div class="app-list-empty">No applications match your search.</div>';
+    return;
+  }
+  appList.innerHTML = state.visibleApps.map(function(a){
+    var badgeClass = STATUS_BADGE_CLASS[a.statusKey] || 'badge-progress';
+    return '<div class="app-item' + (a.id === state.selectedId ? ' active' : '') + '" data-id="' + escapeHtml(a.id) + '">' +
+      '<div class="app-item-top">' +
+        '<div><div class="app-item-uni">' + escapeHtml(a.university || 'Unknown university') + '</div>' +
+        '<div class="app-item-country">' + ICONS.pin + '<span>' + escapeHtml(a.country || 'Unknown') + '</span></div></div>' +
+        '<span class="badge ' + badgeClass + '">' + escapeHtml(a.status || STAGE_LABELS[a.statusKey] || 'Other') + '</span>' +
+      '</div>' +
+      '<div class="app-item-applicant">' + ICONS.mail + '<span>' + escapeHtml(a.applicant) + (a.email ? ' · ' + escapeHtml(a.email) : '') + '</span></div>' +
+      '<div class="app-item-stage">' + escapeHtml(stageLabel(a)) + '</div>' +
+    '</div>';
+  }).join('');
+  Array.prototype.forEach.call(appList.querySelectorAll('.app-item'), function(el){
+    el.addEventListener('click', function(){ selectApp(el.getAttribute('data-id')); });
+  });
+}
+
+searchInput.addEventListener('input', function(){
+  state.searchQuery = searchInput.value.trim().toLowerCase();
+  onFilterChange();
+});
+
+/* ---- date range filter ---- */
+var dateFilterBtn = document.getElementById('dateFilterBtn');
+var dateFilterPanel = document.getElementById('dateFilterPanel');
+var dateFilterLabel = document.getElementById('dateFilterLabel');
+var dateFilterFrom = document.getElementById('dateFilterFrom');
+var dateFilterTo = document.getElementById('dateFilterTo');
+var DATE_RANGE_LABELS = { all:'All dates', today:'Today', '7':'Last 7 days', '30':'Last 30 days', custom:'Custom range' };
+
+dateFilterBtn.addEventListener('click', function(e){
+  e.stopPropagation();
+  dateFilterPanel.classList.toggle('hidden');
+});
+document.addEventListener('click', function(e){
+  if (!dateFilterPanel.classList.contains('hidden') && !dateFilterPanel.contains(e.target) && e.target !== dateFilterBtn){
+    dateFilterPanel.classList.add('hidden');
+  }
+});
+Array.prototype.forEach.call(dateFilterPanel.querySelectorAll('.date-filter-option'), function(btn){
+  btn.addEventListener('click', function(){
+    var range = btn.getAttribute('data-range');
+    Array.prototype.forEach.call(dateFilterPanel.querySelectorAll('.date-filter-option'), function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.dateRange = { key: range, from:null, to:null };
+    dateFilterLabel.textContent = DATE_RANGE_LABELS[range] || 'All dates';
+    if (range !== 'custom'){ dateFilterFrom.value = ''; dateFilterTo.value = ''; }
+    onFilterChange();
+  });
+});
+function applyCustomDateRange(){
+  var fromVal = dateFilterFrom.value ? new Date(dateFilterFrom.value + 'T00:00:00') : null;
+  var toVal = dateFilterTo.value ? new Date(dateFilterTo.value + 'T00:00:00') : null;
+  if (!fromVal && !toVal) return;
+  Array.prototype.forEach.call(dateFilterPanel.querySelectorAll('.date-filter-option'), function(b){ b.classList.remove('active'); });
+  state.dateRange = { key:'custom', from: fromVal, to: toVal };
+  dateFilterLabel.textContent = DATE_RANGE_LABELS.custom;
+  onFilterChange();
+}
+dateFilterFrom.addEventListener('change', applyCustomDateRange);
+dateFilterTo.addEventListener('change', applyCustomDateRange);
+Array.prototype.forEach.call(filterSegmented.querySelectorAll('.segmented-btn'), function(btn){
+  btn.addEventListener('click', function(){
+    Array.prototype.forEach.call(filterSegmented.querySelectorAll('.segmented-btn'), function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.activeFilter = btn.getAttribute('data-filter');
+    onFilterChange();
+  });
+});
+
+/* ============================================================
+   DETAIL CARD (right panel)
+   ============================================================ */
+var workspaceEmpty = document.getElementById('workspaceEmpty');
+var workspaceContent = document.getElementById('workspaceContent');
+var detailCard = document.getElementById('detailCard');
+
+function detailRow(label, valueHtml, full){
+  return '<div class="detail-row' + (full ? ' full' : '') + '">' +
+    '<div class="detail-label">' + escapeHtml(label) + '</div>' +
+    '<div class="detail-value">' + valueHtml + '</div></div>';
+}
+function chipRow(items, muted){
+  if (!items.length) return '<span class="detail-value empty">None specified</span>';
+  return '<div class="chip-row">' + items.map(function(i){ return '<span class="chip' + (muted?' chip-muted':'') + '">' + escapeHtml(i) + '</span>'; }).join('') + '</div>';
+}
+function renderDetailCard(app){
+  var badgeClass = STATUS_BADGE_CLASS[app.statusKey] || 'badge-progress';
+  var facultyLabels = app.facultyCodes.map(function(c){ return facultyLabel(c); });
+  var mobilityLabels = app.mobilityCodes.map(function(c){ return MOBILITY_LABEL_BY_CODE[c] || c; });
+
+  var englishHtml =
+    '<div class="detail-subrow"><span class="muted">Students:</span> ' +
+      (meaningful(app.languageStudents) ? escapeHtml(app.languageStudents) : '<span class="empty">Not specified</span>') +
+    '</div>' +
+    '<div class="detail-subrow"><span class="muted">Staff:</span> ' +
+      (meaningful(app.languageStaff) ? escapeHtml(app.languageStaff) : '<span class="empty">Not specified</span>') +
+    '</div>';
+
+  detailCard.innerHTML =
+    '<div class="detail-head">' +
+      '<div><div class="detail-title">' + escapeHtml(app.university || 'Unknown university') + '</div>' +
+      '<div class="detail-sub">' + ICONS.pin + '<span>' + escapeHtml(app.country || 'Unknown country') + '</span></div></div>' +
+      '<span class="badge ' + badgeClass + '">' + escapeHtml(app.status || STAGE_LABELS[app.statusKey] || 'Other') + '</span>' +
+    '</div>' +
+    '<div class="detail-grid">' +
+      detailRow('Applicant', escapeHtml(app.applicant) + (app.position ? ' <span class="muted">(' + escapeHtml(app.position) + ')</span>' : '')) +
+      detailRow('Email', app.email ? '<a href="mailto:' + escapeHtml(app.email) + '">' + escapeHtml(app.email) + '</a>' : '<span class="detail-value empty">Not provided</span>') +
+      detailRow('Requested faculties', chipRow(facultyLabels), true) +
+      detailRow('Mobility', chipRow(mobilityLabels)) +
+      detailRow('Study levels', chipRow(app.levels)) +
+      detailRow('English requirements', englishHtml, true) +
+      (meaningful(app.languageOther) ? detailRow('Other language requirements', escapeHtml(app.languageOther)) : '') +
+      detailRow('Foreign Erasmus code', meaningful(app.erasmusCode) ? '<span class="mono">' + escapeHtml(app.erasmusCode) + '</span>' : '<span class="empty">Not provided</span>') +
+      ((app.overlaps && app.overlaps.length) ? detailRow('Overlaps', chipRow(app.overlaps), true) : '') +
+      detailRow('Reason for cooperation', app.reason ? escapeHtml(app.reason) : '<span class="empty">Not provided</span>', true) +
+      detailRow('Status', '<span class="badge ' + badgeClass + '">' + escapeHtml(app.status || STAGE_LABELS[app.statusKey] || 'Other') + '</span>') +
+    '</div>';
+}
+
+/* ============================================================
+   EMAIL WORKSPACE (template + editor)
+   ============================================================ */
+var templateChoiceEl = document.getElementById('templateChoice');
+var recipientsHintEl = document.getElementById('recipientsHint');
+var fieldSubject = document.getElementById('fieldSubject');
+var fieldBody = document.getElementById('fieldBody');
+var sourceRowEl = document.getElementById('sourceRow');
+var sourceChipsEl = document.getElementById('sourceChips');
+var recipientsChipsEl = document.getElementById('recipientsChips');
+var recipientsInputEl = document.getElementById('recipientsInput');
+
+var TEMPLATE_DEFS = [
+  { key:'faculty', title:'Faculty Coordinators', sub:'Notify STU faculties for review' },
+  { key:'partner', title:'Partner University', sub:'Confirm the signed agreement' }
+];
+
+function renderTemplateChoice(){
+  templateChoiceEl.innerHTML = TEMPLATE_DEFS.map(function(t){
+    return '<label class="template-option' + (state.activeTemplate === t.key ? ' active' : '') + '" data-template="' + t.key + '">' +
+      '<input type="radio" name="emailTemplate" value="' + t.key + '" ' + (state.activeTemplate === t.key ? 'checked' : '') + '>' +
+      '<span class="template-option-text"><strong>' + escapeHtml(t.title) + '</strong><span>' + escapeHtml(t.sub) + '</span></span>' +
+    '</label>';
+  }).join('');
+  Array.prototype.forEach.call(templateChoiceEl.querySelectorAll('.template-option'), function(el){
+    el.addEventListener('click', function(){ setTemplate(el.getAttribute('data-template')); });
+  });
+}
+
+function currentApp(){
+  return state.apps.filter(function(a){ return a.id === state.selectedId; })[0] || null;
+}
+
+/* ---- recipient chip editor ---- */
+function isLikelyEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||'').trim()); }
+function renderRecipientChips(){
+  recipientsChipsEl.innerHTML = state.recipients.map(function(email, i){
+    var invalid = !isLikelyEmail(email);
+    return '<span class="recipient-chip' + (invalid ? ' invalid' : '') + '" data-idx="' + i + '">' +
+      escapeHtml(email) +
+      '<button type="button" class="recipient-chip-remove" data-idx="' + i + '" aria-label="Remove ' + escapeHtml(email) + '">' +
+        '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
+      '</button></span>';
+  }).join('');
+  Array.prototype.forEach.call(recipientsChipsEl.querySelectorAll('.recipient-chip-remove'), function(btn){
+    btn.addEventListener('click', function(){ removeRecipientAt(parseInt(btn.getAttribute('data-idx'),10)); });
+  });
+}
+function setRecipients(list){
+  state.recipients = (list || []).map(function(e){ return String(e).trim(); }).filter(Boolean);
+  renderRecipientChips();
+}
+function addRecipientsFromRaw(raw){
+  var parts = String(raw || '').split(/[,;\s]+/).map(function(p){ return p.trim(); }).filter(Boolean);
+  var added = false;
+  parts.forEach(function(p){
+    if (state.recipients.indexOf(p) === -1){ state.recipients.push(p); added = true; }
+  });
+  if (added) renderRecipientChips();
+  return added;
+}
+function removeRecipientAt(idx){
+  state.recipients.splice(idx, 1);
+  renderRecipientChips();
+}
+recipientsInputEl.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' || e.key === ',' || e.key === 'Tab'){
+    if (recipientsInputEl.value.trim()){
+      e.preventDefault();
+      addRecipientsFromRaw(recipientsInputEl.value);
+      recipientsInputEl.value = '';
+    }
+  } else if (e.key === 'Backspace' && !recipientsInputEl.value && state.recipients.length){
+    removeRecipientAt(state.recipients.length - 1);
+  }
+});
+recipientsInputEl.addEventListener('blur', function(){
+  if (recipientsInputEl.value.trim()){
+    addRecipientsFromRaw(recipientsInputEl.value);
+    recipientsInputEl.value = '';
+  }
+});
+
+function setTemplate(key){
+  state.activeTemplate = key;
+  renderTemplateChoice();
+  updateAiActionsVisibility();
+  var app = currentApp();
+  if (!app) return;
+  var composed = composeEmail(app, key);
+  setRecipients(composed.recipientsArr);
+  fieldSubject.value = composed.subject;
+  fieldBody.value = composed.body;
+  state.currentDescriptionText = app.aiDescription || app.reason || '';
+  paintRecipientsHint(composed);
+  paintSourceRow(composed);
+}
+/* The Create Description / Generate Faculty Email AI buttons only ever
+   apply to the Faculty Coordinators workflow — hide them entirely for
+   Partner University, per the redesign spec. */
+function updateAiActionsVisibility(){
+  var row = document.getElementById('aiActionsRow');
+  if (!row) return;
+  if (state.activeTemplate === 'faculty') row.classList.remove('hidden');
+  else row.classList.add('hidden');
+}
+function paintRecipientsHint(composed){
+  if (composed.missing && composed.missing.length){
+    recipientsHintEl.textContent = 'No coordinator e-mail on file for: ' + composed.missing.join(', ') + '. Add recipients manually.';
+    recipientsHintEl.classList.add('warn');
+  } else {
+    recipientsHintEl.textContent = 'Recipients were auto-filled from the requested faculties. Everything below is editable.';
+    recipientsHintEl.classList.remove('warn');
+  }
+}
+function paintSourceRow(composed){
+  if (composed.sourceFaculties && composed.sourceFaculties.length){
+    sourceRowEl.classList.remove('hidden');
+    sourceChipsEl.innerHTML = composed.sourceFaculties.map(function(c){
+      return '<span class="source-chip">' + escapeHtml(c) + '</span>';
+    }).join('');
+  } else {
+    sourceRowEl.classList.add('hidden');
+    sourceChipsEl.innerHTML = '';
+  }
+}
+
+function selectApp(id){
+  state.selectedId = id;
+  var app = currentApp();
+  if (!app) return;
+  workspaceEmpty.classList.add('hidden');
+  workspaceContent.classList.remove('hidden');
+  renderDetailCard(app);
+  renderList();
+
+  var draft = state.drafts[id];
+  if (draft){
+    state.activeTemplate = draft.template;
+    renderTemplateChoice();
+    updateAiActionsVisibility();
+    setRecipients(draft.recipients);
+    fieldSubject.value = draft.subject;
+    fieldBody.value = draft.body;
+    state.currentDescriptionText = app.aiDescription || app.reason || '';
+    recipientsHintEl.textContent = 'Restored from your saved draft.';
+    recipientsHintEl.classList.remove('warn');
+    paintSourceRow({ sourceFaculties: draft.template === 'faculty' ? app.facultyCodes : [] });
+  } else {
+    state.activeTemplate = defaultTemplateFor(app);
+    renderTemplateChoice();
+    updateAiActionsVisibility();
+    var composed = composeEmail(app, state.activeTemplate);
+    setRecipients(composed.recipientsArr);
+    fieldSubject.value = composed.subject;
+    fieldBody.value = composed.body;
+    state.currentDescriptionText = app.aiDescription || app.reason || '';
+    paintRecipientsHint(composed);
+    paintSourceRow(composed);
+  }
+}
+
+/* ============================================================
+   AI ACTIONS (Faculty Coordinators only — hidden for Partner University)
+   ------------------------------------------------------------
+   Per spec, the AI is only ever asked to write ONE paragraph: the
+   "reason for cooperation" description. The rest of the Faculty email
+   (mobility, study levels, overlaps, Erasmus code, English/language
+   requirements, boilerplate) is always assembled directly from the
+   application data by buildFacultyBody() — never generated by the AI.
+   ============================================================ */
+var btnCreateDescription = document.getElementById('btnCreateDescription');
+var btnGenerateFacultyEmail = document.getElementById('btnGenerateFacultyEmail');
+
+function setAiButtonsDisabled(disabled){
+  btnCreateDescription.disabled = disabled;
+  btnGenerateFacultyEmail.disabled = disabled;
+}
+
+/* Calls the AI with only the applicant's stated reason and returns the
+   generated Slovak "reason for cooperation" paragraph (trimmed). */
+function requestAiDescription(app){
+  return apiPost('ai', { mode:'description', text: app.reason, university: app.university, country: app.country })
+    .then(function(res){
+      var description = pick(res, ['data','result','description','text','output','content']);
+      if (!description){ throw new Error('The AI endpoint did not return any text.'); }
+      return String(description).trim();
+    });
+}
+
+/* Light editorial pass over the FULLY ASSEMBLED faculty email: the AI may
+   only smooth grammar/phrasing/flow — it must not add, remove, or change
+   any fact (names, university, country, mobility types, codes, numbers,
+   requirements). Used by "Generate Faculty Email" after the code-assembled
+   draft is built, per the request that the AI "edit some sentences so it
+   sounds better" without generating content on its own. */
+function requestAiPolish(bodyText){
+  return apiPost('ai', { mode:'polish', text: bodyText })
+    .then(function(res){
+      var polished = pick(res, ['data','result','polished','text','output','content']);
+      if (!polished){ throw new Error('The AI endpoint did not return any text.'); }
+      return String(polished).trim();
+    });
+}
+
+btnCreateDescription.addEventListener('click', function(){
+  var app = currentApp();
+  if (!app) return;
+  if (!app.reason){
+    showToast('info', 'This application has no stated reason for cooperation to rewrite.');
+    return;
+  }
+  btnCreateDescription.classList.add('spinning');
+  setAiButtonsDisabled(true);
+  requestAiDescription(app)
+    .then(function(description){
+      var body = fieldBody.value;
+      var previous = state.currentDescriptionText;
+      if (previous && body.indexOf(previous) !== -1){
+        // Replace only the existing description paragraph, leaving the rest of the email untouched.
+        body = body.replace(previous, description);
+      } else {
+        // No matching paragraph found (body was edited past recognition) — append instead of discarding user edits.
+        body = body.replace(/\s+$/,'') + '\n\n' + description;
+      }
+      fieldBody.value = body;
+      app.aiDescription = description;
+      state.currentDescriptionText = description;
+      showToast('success', 'Description generated and inserted into the email.');
+    })
+    .catch(function(err){
+      console.error(err);
+      showToast('error', err.message || 'Could not generate a description right now.');
+    })
+    .finally(function(){
+      btnCreateDescription.classList.remove('spinning');
+      setAiButtonsDisabled(false);
+    });
+});
+
+btnGenerateFacultyEmail.addEventListener('click', function(){
+  var app = currentApp();
+  if (!app) return;
+  if (state.activeTemplate !== 'faculty'){
+    showToast('info', 'Switch to the Faculty Coordinators template first.');
+    return;
+  }
+  btnGenerateFacultyEmail.classList.add('spinning');
+  setAiButtonsDisabled(true);
+  var descriptionPromise = app.reason
+    ? requestAiDescription(app)
+    : Promise.resolve(app.aiDescription || '');
+  descriptionPromise
+    .then(function(description){
+      app.aiDescription = description;
+      state.currentDescriptionText = description;
+      var composed = composeEmail(app, 'faculty');
+      // Assembled draft is still 100% code-generated at this point (facts only).
+      // Now let the AI do a light pass to smooth the phrasing/flow.
+      return requestAiPolish(composed.body)
+        .then(function(polishedBody){
+          composed.body = polishedBody;
+          return composed;
+        })
+        .catch(function(err){
+          // Polishing is a nice-to-have — if it fails, keep the code-assembled draft.
+          console.error(err);
+          showToast('info', 'Assembled the email, but the AI polishing pass failed — showing the unpolished draft.');
+          return composed;
+        });
+    })
+    .then(function(composed){
+      setRecipients(composed.recipientsArr);
+      fieldSubject.value = composed.subject;
+      fieldBody.value = composed.body;
+      paintRecipientsHint(composed);
+      paintSourceRow(composed);
+      showToast('success', 'Faculty email generated from the application data.');
+    })
+    .catch(function(err){
+      console.error(err);
+      showToast('error', err.message || 'Could not generate the faculty email right now.');
+    })
+    .finally(function(){
+      btnGenerateFacultyEmail.classList.remove('spinning');
+      setAiButtonsDisabled(false);
+    });
+});
+
+/* ============================================================
+   EDITOR ACTIONS (save draft / copy / preview / send)
+   ============================================================ */
+function collectEmailState(){
+  return {
+    template: state.activeTemplate,
+    recipients: state.recipients.slice(),
+    recipientsText: state.recipients.join(', '),
+    subject: fieldSubject.value.trim(),
+    body: fieldBody.value,
+    bodyHtml: buildHtmlEmail(fieldBody.value)
+  };
+}
+
+document.getElementById('btnSaveDraft').addEventListener('click', function(){
+  var app = currentApp();
+  if (!app) return;
+  var draft = collectEmailState();
+  state.drafts[app.id] = draft;
+  renderCards();
+  showToast('success', 'Draft saved.');
+  apiPost('saveDraft', {
+    applicationId: app.id, template: draft.template, recipients: draft.recipientsText,
+    subject: draft.subject, body: draft.body
+  }).catch(function(err){
+    console.error(err);
+    showToast('info', 'Draft saved locally, but syncing to the server failed.');
+  });
+});
+
+document.getElementById('btnCopy').addEventListener('click', function(){
+  var draft = collectEmailState();
+  var text = 'To: ' + draft.recipientsText + '\nSubject: ' + draft.subject + '\n\n' + draft.body;
+  var done = function(){ showToast('success', 'Email copied to clipboard.'); };
+  var fail = function(){
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      done();
+    } catch(e){ showToast('error', 'Could not copy to clipboard.'); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(fail);
+  } else { fail(); }
+});
+
+document.getElementById('btnPreview').addEventListener('click', function(){
+  var draft = collectEmailState();
+  document.getElementById('previewRecipients').textContent = draft.recipientsText || '—';
+  document.getElementById('previewSubject').textContent = draft.subject || '—';
+  document.getElementById('previewFrame').srcdoc = buildHtmlDocument(draft.body);
+  openModal(previewOverlay);
+});
+document.getElementById('previewSendBtn').addEventListener('click', function(){
+  closeModal(previewOverlay);
+  openSendModal();
+});
+
+document.getElementById('btnSendEmail').addEventListener('click', openSendModal);
+function openSendModal(){
+  var app = currentApp();
+  if (!app) return;
+  var draft = collectEmailState();
+  if (!draft.recipients.length){
+    showToast('error', 'Add at least one recipient before sending.');
+    return;
+  }
+  document.getElementById('sendRecipients').textContent = draft.recipientsText;
+  document.getElementById('sendSubject').textContent = draft.subject || '—';
+  openModal(sendOverlay);
+}
+
+var sendConfirmBtn = document.getElementById('sendConfirmBtn');
+sendConfirmBtn.addEventListener('click', function(){
+  var app = currentApp();
+  if (!app) return;
+  var draft = collectEmailState();
+  sendConfirmBtn.disabled = true;
+  sendConfirmBtn.classList.add('spinning');
+  apiPost('sendEmail', {
+    applicationId: app.id,
+    template: draft.template,
+    recipients: draft.recipients,       // array — preferred if the backend accepts it
+    to: draft.recipientsText,           // comma-joined string — fallback for backends expecting a single string
+    subject: draft.subject,
+    body: draft.body,                   // plain text fallback
+    htmlBody: draft.bodyHtml            // full HTML email (body + signature) for GmailApp.sendEmail's htmlBody option
+  })
+    .then(function(){
+      showToast('success', 'Email sent to ' + draft.recipients.length + ' recipient(s).');
+      delete state.drafts[app.id];
+      renderCards();
+      closeModal(sendOverlay);
+      apiPost('deleteDraft', { applicationId: app.id }).catch(function(){ /* best-effort cleanup — non-fatal */ });
+    })
+    .catch(function(err){
+      console.error(err);
+      showToast('error', err.message || 'Could not send this email. Please try again.');
+    })
+    .finally(function(){
+      sendConfirmBtn.disabled = false;
+      sendConfirmBtn.classList.remove('spinning');
+    });
+});
+
+/* ============================================================
+   EMPTY / ERROR STATES
+   ============================================================ */
+var mainSection = document.getElementById('mainSection');
+var errorSection = document.getElementById('errorSection');
+var lastUpdatedEl = document.getElementById('lastUpdated');
+var refreshBtn = document.getElementById('refreshBtn');
+
+function showEmptyDataState(){
+  cardsSection.innerHTML = '';
+  mainSection.classList.add('hidden');
+  errorSection.innerHTML =
+    '<div class="empty-state">' + ICONS.inbox +
+    '<h3>No applications yet</h3>' +
+    '<p>Once responses start coming in through the Google Form, they will appear here automatically — no action needed.</p>' +
+    '</div>';
+}
+function showError(message){
+  cardsSection.innerHTML = '';
+  mainSection.classList.add('hidden');
+  errorSection.innerHTML =
+    '<div class="error-card">' + ICONS.alert +
+    '<h3>Couldn\'t load applications</h3>' +
+    '<p>' + escapeHtml(message) + '</p>' +
+    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>Try again</button>' +
+    '</div>';
+  document.getElementById('retryBtn').addEventListener('click', load);
+}
+
+/* ============================================================
+   LOAD
+   ============================================================ */
+function load(){
+  showSkeletons();
+  errorSection.innerHTML = '';
+  mainSection.classList.remove('hidden');
+  workspaceEmpty.classList.remove('hidden');
+  workspaceContent.classList.add('hidden');
+  refreshBtn.classList.add('spinning');
+
+  Promise.all([
+    apiGet('applications'),
+    loadFacultyDirectory(),
+    loadEmailTemplates(),
+    loadSenderInfo(),
+    loadDrafts()
+  ]).then(function(results){
+    var raw = results[0];
+    var rows = extractList(raw);
+    var normalized = rows.map(normalizeApplication).filter(isRealApplication);
+
+    if (!normalized.length){
+      showEmptyDataState();
+      return;
+    }
+
+    state.apps = normalized;
+    state.selectedId = null;
+    renderCounts();
+    onFilterChange();
+    renderCards();
+    lastUpdatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }).catch(function(err){
+    console.error(err);
+    showError(err.message || 'Something went wrong while loading data.');
+  }).finally(function(){
+    refreshBtn.classList.remove('spinning');
+  });
+}
+
+refreshBtn.addEventListener('click', load);
+renderTemplateChoice();
+updateAiActionsVisibility();
+load();
+
+})();
+</script>
+</body>
+</html>

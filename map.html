@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Map · STU International Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS — identical to statistics.html
+   ============================================================ */
+:root{
+  --bg:#F6F7FB;
+  --surface:#FFFFFF;
+  --surface-sunken:#F0F1F5;
+  --border:#E3E6ED;
+  --border-strong:#CBD0DB;
+  --text:#14161F;
+  --text-secondary:#5B6072;
+  --text-tertiary:#8A8FA0;
+  --accent:#4954E6;
+  --accent-hover:#3B45D1;
+  --accent-soft:#EEF0FE;
+  --gold:#B8873A;
+  --gold-soft:#FBF1E1;
+  --amber:#C9821A;
+  --amber-soft:#FDF1DF;
+  --red:#D6373F;
+  --red-soft:#FCEAEB;
+  --shadow-sm:0 1px 2px 0 rgba(20,22,31,.05),0 1px 1px 0 rgba(20,22,31,.03);
+  --shadow-md:0 4px 10px -2px rgba(20,22,31,.08),0 2px 4px -2px rgba(20,22,31,.04);
+  --shadow-lg:0 16px 40px -12px rgba(20,22,31,.18);
+  --radius-sm:8px;
+  --radius:12px;
+  --radius-lg:18px;
+  --font-ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+  --status-new:#4954E6; --status-new-soft:#EEF0FE;
+  --status-progress:#C9821A; --status-progress-soft:#FDF1DF;
+  --status-signed:#B8873A; --status-signed-soft:#FBF1E1;
+  --status-rejected:#D6373F; --status-rejected-soft:#FCEAEB;
+}
+[data-theme="dark"]{
+  --bg:#0C0D12;
+  --surface:#15171F;
+  --surface-sunken:#10121A;
+  --border:#262A36;
+  --border-strong:#34394A;
+  --text:#EDEEF3;
+  --text-secondary:#A0A5B5;
+  --text-tertiary:#6B7080;
+  --accent:#7C86F2;
+  --accent-hover:#939CF5;
+  --accent-soft:#20244A;
+  --gold:#D9AE64;
+  --gold-soft:#2E2413;
+  --amber:#E0A542;
+  --amber-soft:#302710;
+  --red:#F0656C;
+  --red-soft:#361A1D;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 6px 16px rgba(0,0,0,.45);
+  --shadow-lg:0 24px 56px rgba(0,0,0,.6);
+  --status-new:#7C86F2; --status-new-soft:#20244A;
+  --status-progress:#E0A542; --status-progress-soft:#302710;
+  --status-signed:#D9AE64; --status-signed-soft:#2E2413;
+  --status-rejected:#F0656C; --status-rejected-soft:#361A1D;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-ui);
+  -webkit-font-smoothing:antialiased;
+  transition:background .25s ease,color .25s ease;
+  min-height:100vh;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.02em;}
+p{margin:0;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+input{font-family:inherit;}
+::selection{background:var(--accent);color:#fff;}
+.hidden{display:none !important;}
+.muted{color:var(--text-tertiary);font-size:13px;}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:1000;
+  display:flex;align-items:center;gap:24px;
+  padding:14px 28px;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:10px;margin-right:8px;}
+.brand-mark{width:32px;height:32px;flex:none;}
+.brand-text{display:flex;flex-direction:column;line-height:1.15;}
+.brand-name{font-weight:700;font-size:14.5px;}
+.brand-sub{font-size:11.5px;color:var(--text-tertiary);}
+.topbar-nav{display:flex;gap:4px;flex:1;}
+.nav-link{
+  padding:8px 14px;border-radius:8px;font-size:14px;font-weight:500;
+  color:var(--text-secondary);transition:background .15s,color .15s;
+}
+.nav-link:hover{background:var(--surface-sunken);color:var(--text);}
+.nav-link.active{background:var(--accent-soft);color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.icon-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text-secondary);
+  transition:border-color .15s,color .15s,transform .15s;
+}
+.icon-btn:hover{border-color:var(--border-strong);color:var(--text);}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.admin-link{
+  font-size:13px;font-weight:600;color:var(--text-secondary);
+  border:1px solid var(--border);border-radius:9px;padding:8px 12px;
+  transition:border-color .15s,color .15s;
+}
+.admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* ============================================================
+   PAGE LAYOUT
+   ============================================================ */
+.page{max-width:1320px;margin:0 auto;padding:32px 28px 64px;}
+.page-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  flex-wrap:wrap;gap:14px;margin-bottom:26px;
+}
+.page-header h1{font-size:26px;}
+.page-sub{color:var(--text-secondary);font-size:14.5px;margin-top:4px;}
+.page-actions{display:flex;align-items:center;gap:14px;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 14px;border-radius:9px;font-size:13.5px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  transition:border-color .15s,transform .1s,background .15s;
+}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.btn:hover{border-color:var(--border-strong);}
+.btn:active{transform:scale(.97);}
+.btn.spinning svg{animation:spin .7s linear infinite;}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.btn-primary:hover{background:var(--accent-hover);border-color:var(--accent-hover);}
+.btn-block{width:100%;justify-content:center;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+.cards-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;display:flex;flex-direction:column;gap:14px;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,border-color .2s,transform .2s;
+}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.stat-icon{
+  width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+}
+.stat-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.stat-value{
+  font-family:var(--font-mono);font-size:28px;font-weight:600;letter-spacing:-.01em;display:block;
+}
+.stat-label{font-size:13px;color:var(--text-secondary);font-weight:500;}
+
+/* skeleton */
+.skeleton{position:relative;overflow:hidden;background:var(--surface-sunken);border-radius:var(--radius-lg);}
+.skeleton::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  transform:translateX(-100%);animation:shimmer 1.4s infinite;
+}
+[data-theme="dark"] .skeleton::after{background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%);}
+@keyframes shimmer{100%{transform:translateX(100%);}}
+.skeleton-card{height:104px;border:1px solid var(--border);}
+
+/* ============================================================
+   MAP LAYOUT
+   ============================================================ */
+.map-layout{
+  display:grid;grid-template-columns:308px 1fr;gap:16px;align-items:start;
+}
+.filter-col{display:flex;flex-direction:column;gap:16px;position:sticky;top:82px;}
+.filter-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;box-shadow:var(--shadow-sm);
+}
+.filter-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.filter-card-head h3{font-size:14px;}
+.filter-count{
+  font-family:var(--font-mono);font-size:11px;color:var(--accent);background:var(--accent-soft);
+  padding:2px 7px;border-radius:20px;font-weight:600;
+}
+
+/* search */
+.search-wrap{position:relative;}
+.search-wrap svg{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:16px;height:16px;stroke:var(--text-tertiary);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;
+  pointer-events:none;
+}
+.search-input{
+  width:100%;padding:10px 12px 10px 36px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface-sunken);color:var(--text);font-size:13.5px;
+  transition:border-color .15s,background .15s;
+}
+.search-input:focus{outline:none;border-color:var(--accent);background:var(--surface);}
+.search-input::placeholder{color:var(--text-tertiary);}
+
+/* checkbox list */
+.filter-list{display:flex;flex-direction:column;gap:2px;max-height:290px;overflow-y:auto;margin:0 -6px;padding:0 6px;}
+.filter-list::-webkit-scrollbar{width:6px;}
+.filter-list::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px;}
+.filter-option{
+  display:flex;align-items:center;gap:10px;padding:7px 6px;border-radius:8px;
+  cursor:pointer;transition:background .12s;user-select:none;
+}
+.filter-option:hover{background:var(--surface-sunken);}
+.filter-option input{
+  appearance:none;-webkit-appearance:none;flex:none;
+  width:17px;height:17px;border-radius:5px;border:1.6px solid var(--border-strong);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;
+  transition:background .15s,border-color .15s;cursor:pointer;position:relative;
+}
+.filter-option input:checked{background:var(--accent);border-color:var(--accent);}
+.filter-option input:checked::after{
+  content:"";position:absolute;left:5px;top:1.5px;width:4px;height:8px;
+  border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg);
+}
+.filter-option span{font-size:13.2px;color:var(--text);line-height:1.3;}
+.filter-option.all span{font-weight:600;}
+.filter-option small{display:block;font-size:11px;color:var(--text-tertiary);font-family:var(--font-mono);margin-top:1px;}
+.filter-divider{height:1px;background:var(--border);margin:8px 0;}
+
+.reset-btn{margin-top:2px;}
+
+/* ============================================================
+   MAP CARD
+   ============================================================ */
+.map-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);overflow:hidden;position:relative;
+}
+#mapEl{height:620px;width:100%;background:var(--surface-sunken);}
+[data-theme="dark"] #mapEl{background:#0a0b10;}
+
+.map-empty-overlay{
+  position:absolute;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;
+  background:color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter:blur(2px);
+}
+.empty-state{
+  background:var(--surface);border:1px dashed var(--border-strong);
+  border-radius:var(--radius-lg);padding:40px 32px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:12px;max-width:340px;
+}
+.empty-state svg{width:34px;height:34px;stroke:var(--text-tertiary);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.empty-state h3{font-size:15.5px;}
+.empty-state p{color:var(--text-secondary);font-size:13.3px;}
+.error-card{
+  grid-column:1/-1;background:var(--surface);border:1px dashed var(--border-strong);
+  border-radius:var(--radius-lg);padding:56px 24px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+.error-card svg{width:38px;height:38px;stroke:var(--red);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.error-card h3{font-size:16px;}
+.error-card p{color:var(--text-secondary);font-size:13.5px;max-width:420px;}
+.error-card .btn{margin-top:6px;}
+
+/* ============================================================
+   LEAFLET OVERRIDES — match the app's design language
+   ============================================================ */
+.leaflet-container{
+  font-family:var(--font-ui);background:var(--surface-sunken);
+}
+.leaflet-control-attribution{
+  background:color-mix(in srgb, var(--surface) 82%, transparent) !important;
+  color:var(--text-tertiary) !important;font-size:10.5px !important;
+}
+.leaflet-control-attribution a{color:var(--text-secondary) !important;}
+.leaflet-control-zoom{border:1px solid var(--border) !important;box-shadow:var(--shadow-sm) !important;border-radius:9px !important;overflow:hidden;}
+.leaflet-control-zoom a{
+  background:var(--surface) !important;color:var(--text) !important;
+  border-color:var(--border) !important;
+}
+.leaflet-control-zoom a:hover{background:var(--surface-sunken) !important;}
+
+.iia-marker{display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 3px 6px rgba(20,22,31,.28));}
+.iia-cluster{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;border-radius:50%;
+  background:color-mix(in srgb, var(--accent) 88%, transparent);
+  color:#fff;font-family:var(--font-mono);font-weight:600;font-size:12.5px;
+  border:3px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  box-shadow:var(--shadow-md);
+}
+
+.leaflet-popup-content-wrapper{
+  background:var(--surface) !important;color:var(--text) !important;
+  border-radius:var(--radius) !important;box-shadow:var(--shadow-lg) !important;
+  border:1px solid var(--border) !important;padding:0 !important;
+}
+.leaflet-popup-content{margin:0 !important;width:300px !important;}
+.leaflet-popup-tip{background:var(--surface) !important;border:1px solid var(--border) !important;box-shadow:none !important;}
+.leaflet-popup-close-button{color:var(--text-tertiary) !important;font-size:18px !important;padding:8px 10px 0 0 !important;}
+.leaflet-popup-close-button:hover{color:var(--text) !important;}
+
+.popup-card{max-height:420px;overflow-y:auto;}
+.popup-head{padding:16px 16px 12px;border-bottom:1px solid var(--border);}
+.popup-uni{font-size:15px;font-weight:700;letter-spacing:-.01em;line-height:1.25;}
+.popup-country{
+  display:flex;align-items:center;gap:6px;margin-top:5px;
+  font-size:12.5px;color:var(--text-secondary);font-weight:500;
+}
+.popup-country svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+.popup-agreement{padding:14px 16px;border-bottom:1px solid var(--border);}
+.popup-agreement:last-child{border-bottom:none;}
+.popup-agreement-badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;
+  background:var(--status-signed-soft);color:var(--status-signed);
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px;
+}
+.popup-row{margin-bottom:8px;}
+.popup-row:last-child{margin-bottom:0;}
+.popup-row-label{font-size:10.5px;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:.04em;font-weight:600;margin-bottom:3px;}
+.popup-row-value{font-size:12.8px;color:var(--text);line-height:1.45;}
+.popup-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.popup-chip{
+  font-size:11px;font-weight:600;padding:2.5px 8px;border-radius:20px;
+  background:var(--accent-soft);color:var(--accent);
+}
+.popup-contact{color:var(--text-secondary);}
+.popup-contact a{color:var(--accent);}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1000px){
+  .cards-grid{grid-template-columns:repeat(2,1fr);}
+  .map-layout{grid-template-columns:1fr;}
+  .filter-col{position:static;}
+  #mapEl{height:460px;}
+}
+@media (max-width:640px){
+  .topbar{padding:12px 16px;gap:10px;}
+  .brand-sub{display:none;}
+  .topbar-nav{gap:2px;}
+  .nav-link{padding:7px 9px;font-size:13px;}
+  .page{padding:22px 16px 48px;}
+  .cards-grid{grid-template-columns:1fr 1fr;}
+  .page-header{align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<script>
+/* Apply theme before first paint to avoid flash-of-wrong-theme */
+(function(){
+  try{
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  }catch(e){}
+})();
+</script>
+
+<nav class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="13" stroke="var(--accent)" stroke-width="2"/>
+      <path d="M16 3c3.6 3.4 5.6 8 5.6 13S19.6 25.6 16 29M16 3c-3.6 3.4-5.6 8-5.6 13S12.4 25.6 16 29" stroke="var(--accent)" stroke-width="1.4" opacity=".55"/>
+      <path d="M3 16h26" stroke="var(--accent)" stroke-width="1.4" opacity=".55"/>
+      <circle cx="16" cy="16" r="2.6" fill="var(--gold)"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">STU International Office</span>
+      <span class="brand-sub">Inter-Institutional Agreements</span>
+    </div>
+  </div>
+  <div class="topbar-nav">
+    <a href="statistics.html" class="nav-link">Statistics</a>
+    <a href="map.html" class="nav-link active">Partner Map</a>
+    <a href="communication.html" class="nav-link">Communication</a>
+  </div>
+  <div class="topbar-right">
+    <a class="admin-link" href="communication.html">Admin sign in</a>
+    <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1>Partner Universities Map</h1>
+      <p class="page-sub">Explore all signed Inter-Institutional Agreements around the world.</p>
+    </div>
+    <div class="page-actions">
+      <span id="lastUpdated" class="muted"></span>
+      <button id="refreshBtn" class="btn">
+        <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <section id="cardsSection" class="cards-grid" aria-label="Summary statistics"></section>
+
+  <section id="mainSection" class="map-layout" aria-label="Map and filters">
+    <div class="filter-col">
+      <div class="filter-card">
+        <div class="filter-card-head"><h3>Search</h3></div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" class="search-input" placeholder="University or country…" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="filter-card">
+        <div class="filter-card-head"><h3>Faculty</h3><span class="filter-count" id="facultyCount">All</span></div>
+        <div class="filter-list" id="facultyList"></div>
+      </div>
+
+      <div class="filter-card">
+        <div class="filter-card-head"><h3>Mobility Type</h3><span class="filter-count" id="mobilityCount">All</span></div>
+        <div class="filter-list" id="mobilityList"></div>
+      </div>
+
+      <div class="filter-card">
+        <div class="filter-card-head"><h3>Study Level</h3><span class="filter-count" id="levelCount">All</span></div>
+        <div class="filter-list" id="levelList"></div>
+      </div>
+
+      <button id="resetBtn" class="btn btn-block reset-btn">
+        <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
+        Reset Filters
+      </button>
+    </div>
+
+    <div class="map-card">
+      <div id="mapEl"></div>
+      <div id="mapEmptyOverlay" class="map-empty-overlay hidden">
+        <div class="empty-state">
+          <svg viewBox="0 0 24 24"><path d="M3 12l3-8h12l3 8"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 12h5l1.5 3h5L16 12h5"/></svg>
+          <h3>No agreements match the selected filters.</h3>
+          <p>Try adjusting or clearing your filters to see more partner universities.</p>
+          <button id="emptyResetBtn" class="btn">Reset Filters</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="errorSection"></section>
+</main>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   CONFIG
+   ============================================================
+   This page talks only to the existing Google Apps Script API.
+   The backend is not modified — the frontend adapts to it and
+   performs all filtering client-side after a single fetch.
+*/
+var API_BASE = "https://script.google.com/macros/s/AKfycbwrgoPNlVEGtdGamlAQDv8dsRWjH3u56cR7v9jiGEV1stJhH4mq_SmNLraV0fKE6VRU/exec";
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+var ICONS = {
+  signed:   '<svg viewBox="0 0 24 24"><path d="M12 2l2.3 1.4 2.6-.6.9 2.5 2.4 1.2-.9 2.5.9 2.5-2.4 1.2-.9 2.5-2.6-.6L12 22l-2.3-1.4-2.6.6-.9-2.5-2.4-1.2.9-2.5-.9-2.5 2.4-1.2.9-2.5 2.6.6L12 2Z"/><path d="M8.7 12.3l2.2 2.2 4.4-4.8"/></svg>',
+  globe:    '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>',
+  building: '<svg viewBox="0 0 24 24"><path d="M4 21V5a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v16"/><path d="M13 21V9a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v12"/><path d="M8 8h.01M8 12h.01M8 16h.01"/></svg>',
+  eye:      '<svg viewBox="0 0 24 24"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>',
+  sun:      '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.4 4.4l1.8 1.8M17.8 17.8l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.4 19.6l1.8-1.8M17.8 6.2l1.8-1.8"/></svg>',
+  moon:     '<svg viewBox="0 0 24 24"><path d="M20 14.3A8.4 8.4 0 1 1 9.7 4a7 7 0 0 0 10.3 10.3Z"/></svg>',
+  alert:    '<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.4h.01"/></svg>',
+  pin:      '<svg viewBox="0 0 24 24"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8Z"/><circle cx="12" cy="10" r="2.6"/></svg>'
+};
+
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+var themeToggle = document.getElementById('themeToggle');
+function paintThemeIcon(){
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = dark ? ICONS.sun : ICONS.moon;
+}
+themeToggle.addEventListener('click', function(){
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  paintThemeIcon();
+  applyTileTheme();
+});
+paintThemeIcon();
+
+/* ============================================================
+   GENERIC API + NORMALIZATION HELPERS
+   (same resilient pattern used across the app: the backend's
+   exact JSON key names may vary, so every read goes through
+   pick(), which tries a list of likely key spellings.)
+   ============================================================ */
+function apiGet(action, params){
+  var url = new URL(API_BASE);
+  url.searchParams.set('action', action);
+  if (params) Object.keys(params).forEach(function(k){
+    if (params[k] !== undefined && params[k] !== null && params[k] !== '') url.searchParams.set(k, params[k]);
+  });
+  return fetch(url.toString(), { method:'GET' }).then(function(res){
+    if (!res.ok) throw new Error('The server responded with status ' + res.status + '.');
+    return res.json();
+  }).then(function(json){
+    if (json && json.error) throw new Error(json.error);
+    return json;
+  });
+}
+function pick(obj, keys){
+  if (!obj || typeof obj !== 'object') return undefined;
+  for (var i=0;i<keys.length;i++){ var k = keys[i]; if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k]; }
+  var lower = {};
+  Object.keys(obj).forEach(function(kk){ lower[kk.toLowerCase().replace(/[\s_]/g,'')] = obj[kk]; });
+  for (var j=0;j<keys.length;j++){
+    var norm = keys[j].toLowerCase().replace(/[\s_]/g,'');
+    if (lower[norm] !== undefined && lower[norm] !== null && lower[norm] !== '') return lower[norm];
+  }
+  return undefined;
+}
+function splitMulti(value){
+  if (value === undefined || value === null) return [];
+  if (Array.isArray(value)) return value.map(function(v){return String(v).trim();}).filter(Boolean);
+  return String(value).split(',').map(function(v){return v.trim();}).filter(Boolean);
+}
+function extractList(raw){
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw.applications)) return raw.applications;
+  if (Array.isArray(raw.data)) return raw.data;
+  if (Array.isArray(raw.rows)) return raw.rows;
+  if (Array.isArray(raw.items)) return raw.items;
+  if (Array.isArray(raw.results)) return raw.results;
+  return [];
+}
+function escapeHtml(s){ var d=document.createElement('div'); d.textContent=(s===undefined||s===null)?'':String(s); return d.innerHTML; }
+
+function classifyStatus(raw){
+  var s = (raw||'').toString().trim();
+  if (!s) return 'unknown';
+  var low = s.toLowerCase();
+  if (low.indexOf('podp') !== -1 || low.indexOf('sign') !== -1) return 'signed';
+  if (low.indexOf('zamiet') !== -1 || low.indexOf('reject') !== -1) return 'rejected';
+  if (low.indexOf('nová') !== -1 || low.indexOf('nova') !== -1 || low === 'new') return 'new';
+  if (low.indexOf('pracuje') !== -1 || low.indexOf('poslan') !== -1 || low.indexOf('progress') !== -1 || low.indexOf('pending') !== -1) return 'in_progress';
+  return 'unknown';
+}
+
+/* ============================================================
+   FACULTY / MOBILITY / LEVEL DEFINITIONS
+   ============================================================ */
+var FACULTY_DEFS = [
+  { code:'SvF',   label:'Faculty of Civil Engineering (SvF)' },
+  { code:'SjF',   label:'Faculty of Mechanical Engineering (SjF)' },
+  { code:'FEI',   label:'Faculty of Electrical Engineering and Information Technology (FEI)' },
+  { code:'FCHPT', label:'Faculty of Chemical and Food Technology (FCHPT)' },
+  { code:'FAD',   label:'Faculty of Architecture and Design (FAD)' },
+  { code:'MTF',   label:'Faculty of Materials Science and Technology (MTF)' },
+  { code:'FIIT',  label:'Faculty of Informatics and Information Technologies (FIIT)' },
+  { code:'UM',    label:'Institute of Management (UM)' }
+];
+var MOBILITY_DEFS = [
+  { code:'SMS', label:'SMS — Student Mobility for Studies' },
+  { code:'SMT', label:'SMT — Student Mobility for Traineeships' },
+  { code:'STA', label:'STA — Staff Mobility for Teaching' },
+  { code:'STT', label:'STT — Staff Mobility for Training' },
+  { code:'BIP', label:'BIP' }
+];
+var LEVEL_DEFS = ['Bachelor', 'Master', 'PhD'];
+
+function extractFacultyCodes(str){
+  return splitMulti(str).map(function(s){
+    var m = s.match(/\(([^)]+)\)/);
+    var code = m ? m[1].trim() : s.trim();
+    return code.toUpperCase();
+  }).filter(Boolean);
+}
+function extractMobilityCodes(str, bipFlag){
+  var text = String(str || '');
+  var found = [];
+  ['SMS','SMT','STA','STT','BIP'].forEach(function(code){
+    if (new RegExp('\\b' + code + '\\b', 'i').test(text)) found.push(code);
+  });
+  if (bipFlag && /^y|áno|ano/i.test(String(bipFlag).trim()) && found.indexOf('BIP') === -1) found.push('BIP');
+  return found;
+}
+function extractLevels(str){
+  return splitMulti(str).map(function(s){
+    var low = s.toLowerCase();
+    if (low.indexOf('bachelor') !== -1) return 'Bachelor';
+    if (low.indexOf('master') !== -1) return 'Master';
+    if (low.indexOf('phd') !== -1 || low.indexOf('doctor') !== -1) return 'PhD';
+    return s;
+  }).filter(Boolean);
+}
+
+/* ============================================================
+   NORMALIZATION
+   ------------------------------------------------------------
+   The form has two possible workflows: a foreign university
+   fills it in about itself ("Your home university" / faculty
+   question #1), or STU staff fills it in on the foreign
+   university's behalf ("Name of foreign instituion" / faculty
+   question #2). pick() below prefers the workflow-2 field and
+   falls back to workflow-1, which correctly resolves the real
+   partner university and STU faculty in both cases.
+   ============================================================ */
+function normalizeApplication(a, idx){
+  var university = pick(a, [
+    'Name of foreign instituion', 'Name of foreign institution',
+    'foreignUniversity', 'partnerUniversity',
+    'Your home university', 'homeUniversity', 'university', 'University'
+  ]);
+  var country = pick(a, ['Country of foreign institution', 'country', 'Country']);
+  var facultyRaw = pick(a, [
+    'With which faculty of STU would you like to conclude the IIA?', 'faculty2', 'stuFaculty2',
+    'With which faculty would you like to conclude the IIA?', 'faculty', 'Faculty', 'stuFaculty'
+  ]);
+  var mobilityRaw = pick(a, [
+    'What kind of mobility would you like to include in the agreement? 2', 'mobility2',
+    'What kind of mobility would you like to include in the agreement?', 'mobility', 'Mobility', 'mobilityType'
+  ]);
+  var bipFlag = pick(a, ['Would you like to include BIPs in the agreement?', 'bip', 'BIP']);
+  var levelRaw = pick(a, [
+    'If applicable, what levels of study you want to include in the agreement? (For long term mobilities) 2', 'level2', 'studyLevel2',
+    'If applicable, what levels of study you want to include in the agreement? (For long term mobilities)', 'studyLevel', 'level', 'Study level'
+  ]);
+  var contactName = pick(a, ['Name of person responsible for signing the inter institutional agreements at your institution?', 'contactName', 'contactPerson']);
+  var contactEmail = pick(a, ['E-mail of person responsible for signing the inter institutional agreements at your institution?', 'contactEmail', 'contact email', 'Contact email']);
+  var status = pick(a, ['Status', 'status']);
+
+  return {
+    id: pick(a, ['id', 'ID', 'rowIndex', 'row']) || ('row-' + idx),
+    university: (university || '').toString().trim(),
+    country: (country || '').toString().trim(),
+    facultyCodes: extractFacultyCodes(facultyRaw),
+    mobilityCodes: extractMobilityCodes(mobilityRaw, bipFlag),
+    levels: extractLevels(levelRaw),
+    contactName: (contactName || '').toString().trim(),
+    contactEmail: (contactEmail || '').toString().trim(),
+    status: (status || '').toString().trim(),
+    statusKey: classifyStatus(status)
+  };
+}
+
+/* ============================================================
+   COUNTRY CENTROIDS (approximate, for placing markers)
+   ============================================================ */
+var COUNTRY_COORDS = {
+  "afghanistan":[34.52,69.18],"albania":[41.33,19.82],"algeria":[36.75,3.06],"andorra":[42.51,1.52],
+  "angola":[-8.84,13.23],"argentina":[-34.60,-58.38],"armenia":[40.18,44.51],"australia":[-35.28,149.13],
+  "austria":[48.21,16.37],"azerbaijan":[40.41,49.87],"bahrain":[26.23,50.59],"bangladesh":[23.81,90.41],
+  "belarus":[53.90,27.57],"belgium":[50.85,4.35],"belize":[17.25,-88.77],"benin":[6.37,2.42],
+  "bhutan":[27.47,89.64],"bolivia":[-16.50,-68.15],"bosnia and herzegovina":[43.86,18.41],"botswana":[-24.65,25.91],
+  "brazil":[-15.79,-47.88],"brunei":[4.90,114.94],"bulgaria":[42.70,23.32],"burkina faso":[12.37,-1.53],
+  "burundi":[-3.38,29.36],"cambodia":[11.56,104.92],"cameroon":[3.85,11.50],"canada":[45.42,-75.70],
+  "chad":[12.13,15.06],"chile":[-33.45,-70.67],"china":[39.90,116.41],"colombia":[4.71,-74.07],
+  "costa rica":[9.93,-84.09],"croatia":[45.81,15.98],"cuba":[23.13,-82.38],"cyprus":[35.19,33.38],
+  "czech republic":[50.08,14.44],"czechia":[50.08,14.44],"denmark":[55.68,12.57],"djibouti":[11.59,43.15],
+  "dominican republic":[18.49,-69.94],"ecuador":[-0.19,-78.47],"egypt":[30.04,31.24],"el salvador":[13.69,-89.22],
+  "estonia":[59.44,24.75],"ethiopia":[9.03,38.74],"fiji":[-18.14,178.44],"finland":[60.17,24.94],
+  "france":[48.86,2.35],"gabon":[0.42,9.45],"georgia":[41.72,44.79],"germany":[52.52,13.40],
+  "ghana":[5.60,-0.19],"greece":[37.98,23.73],"guatemala":[14.63,-90.51],"guinea":[9.51,-13.71],
+  "honduras":[14.07,-87.19],"hong kong":[22.32,114.17],"hungary":[47.50,19.04],"iceland":[64.15,-21.94],
+  "india":[28.61,77.21],"indonesia":[-6.21,106.85],"iran":[35.69,51.39],"iraq":[33.31,44.36],
+  "ireland":[53.35,-6.26],"israel":[31.77,35.21],"italy":[41.90,12.50],"ivory coast":[6.83,-5.29],
+  "jamaica":[18.02,-76.80],"japan":[35.68,139.69],"jordan":[31.95,35.91],"kazakhstan":[51.17,71.45],
+  "kenya":[-1.29,36.82],"kosovo":[42.67,21.17],"kuwait":[29.38,47.99],"kyrgyzstan":[42.87,74.59],
+  "laos":[17.97,102.60],"latvia":[56.95,24.11],"lebanon":[33.89,35.50],"lesotho":[-29.31,27.48],
+  "liberia":[6.30,-10.80],"libya":[32.89,13.19],"liechtenstein":[47.14,9.52],"lithuania":[54.69,25.28],
+  "luxembourg":[49.61,6.13],"macau":[22.20,113.55],"madagascar":[-18.88,47.51],"malawi":[-13.96,33.79],
+  "malaysia":[3.14,101.69],"maldives":[4.18,73.51],"mali":[12.65,-8.00],"malta":[35.90,14.51],
+  "mauritania":[18.08,-15.98],"mauritius":[-20.16,57.50],"mexico":[19.43,-99.13],"moldova":[47.01,28.86],
+  "monaco":[43.73,7.42],"mongolia":[47.92,106.92],"montenegro":[42.44,19.26],"morocco":[34.02,-6.83],
+  "mozambique":[-25.97,32.57],"myanmar":[16.87,96.20],"namibia":[-22.56,17.08],"nepal":[27.72,85.32],
+  "netherlands":[52.37,4.90],"new zealand":[-41.29,174.78],"nicaragua":[12.11,-86.24],"niger":[13.51,2.11],
+  "nigeria":[9.08,7.40],"north korea":[39.02,125.75],"north macedonia":[42.00,21.43],"norway":[59.91,10.75],
+  "oman":[23.59,58.41],"pakistan":[33.68,73.05],"palestine":[31.90,35.20],"panama":[8.99,-79.52],
+  "papua new guinea":[-9.48,147.15],"paraguay":[-25.28,-57.63],"peru":[-12.05,-77.04],"philippines":[14.60,120.98],
+  "poland":[52.23,21.01],"portugal":[38.72,-9.14],"qatar":[25.29,51.53],"romania":[44.43,26.10],
+  "russia":[55.75,37.62],"rwanda":[-1.94,30.06],"saudi arabia":[24.71,46.68],"senegal":[14.72,-17.47],
+  "serbia":[44.79,20.45],"singapore":[1.35,103.82],"slovakia":[48.15,17.11],"slovenia":[46.06,14.51],
+  "somalia":[2.05,45.32],"south africa":[-25.75,28.19],"south korea":[37.57,126.98],"south sudan":[4.85,31.58],
+  "spain":[40.42,-3.70],"sri lanka":[6.93,79.85],"sudan":[15.50,32.56],"suriname":[5.87,-55.17],
+  "sweden":[59.33,18.06],"switzerland":[46.95,7.45],"syria":[33.51,36.28],"taiwan":[25.03,121.57],
+  "tajikistan":[38.56,68.79],"tanzania":[-6.79,39.21],"thailand":[13.75,100.50],"togo":[6.13,1.22],
+  "trinidad and tobago":[10.65,-61.52],"tunisia":[36.81,10.18],"turkey":[39.93,32.86],"turkmenistan":[37.95,58.38],
+  "uganda":[0.35,32.58],"ukraine":[50.45,30.52],"united arab emirates":[24.45,54.38],"united kingdom":[51.51,-0.13],
+  "uk":[51.51,-0.13],"united states":[38.90,-77.04],"usa":[38.90,-77.04],"united states of america":[38.90,-77.04],
+  "uruguay":[-34.90,-56.16],"uzbekistan":[41.30,69.24],"venezuela":[10.49,-66.88],"vietnam":[21.03,105.85],
+  "yemen":[15.37,44.19],"zambia":[-15.39,28.32],"zimbabwe":[-17.83,31.05]
+};
+var COUNTRY_ALIASES = { "ausrtia":"austria", "czech":"czechia", "south-korea":"south korea", "republic of korea":"south korea" };
+function countryCentroid(country){
+  var key = (country || '').toString().trim().toLowerCase();
+  if (!key) return null;
+  if (COUNTRY_ALIASES[key]) key = COUNTRY_ALIASES[key];
+  if (COUNTRY_COORDS[key]) return COUNTRY_COORDS[key];
+  return null;
+}
+function hashOffset(str, seed){
+  var h = seed;
+  for (var i=0;i<str.length;i++){ h = ((h<<5)-h+str.charCodeAt(i))|0; }
+  return ((h % 1000) / 1000) * 0.7 - 0.35;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+var allAgreements = [];       // signed, non-Slovak agreements (base dataset)
+var filteredAgreements = [];  // after applying user filters
+var selectedFaculties = new Set();
+var selectedMobility = new Set();
+var selectedLevels = new Set();
+var searchQuery = '';
+
+var map = null;
+var clusterGroup = null;
+var tileLayer = null;
+var TILE_URLS = {
+  light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  dark:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+};
+
+var cardsSection = document.getElementById('cardsSection');
+var mainSection = document.getElementById('mainSection');
+var errorSection = document.getElementById('errorSection');
+var mapEmptyOverlay = document.getElementById('mapEmptyOverlay');
+var lastUpdatedEl = document.getElementById('lastUpdated');
+var refreshBtn = document.getElementById('refreshBtn');
+
+/* ============================================================
+   MAP INIT
+   ============================================================ */
+function initMap(){
+  if (map) return;
+  map = L.map('mapEl', { zoomControl:true, minZoom:2, worldCopyJump:true }).setView([25, 20], 2);
+  tileLayer = L.tileLayer(currentTileUrl(), {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19
+  }).addTo(map);
+  clusterGroup = L.markerClusterGroup({
+    showCoverageOnHover:false,
+    spiderfyOnMaxZoom:true,
+    maxClusterRadius:50,
+    iconCreateFunction:function(cluster){
+      var count = cluster.getChildCount();
+      var size = count < 10 ? 34 : count < 30 ? 40 : 48;
+      return L.divIcon({
+        html:'<div class="iia-cluster" style="width:'+size+'px;height:'+size+'px;">'+count+'</div>',
+        className:'iia-cluster-wrap', iconSize:[size,size]
+      });
+    }
+  });
+  map.addLayer(clusterGroup);
+}
+function currentTileUrl(){
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return dark ? TILE_URLS.dark : TILE_URLS.light;
+}
+function applyTileTheme(){
+  if (!tileLayer) return;
+  tileLayer.setUrl(currentTileUrl());
+}
+function pinDivIcon(){
+  var color = getComputedStyle(document.documentElement).getPropertyValue('--gold').trim();
+  return L.divIcon({
+    className:'iia-marker',
+    html:'<svg width="30" height="30" viewBox="0 0 24 24" fill="'+color+'" stroke="#fff" stroke-width="1"><path d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8Z"/><circle cx="12" cy="10" r="2.8" fill="#fff"/></svg>',
+    iconSize:[30,30], iconAnchor:[15,29], popupAnchor:[0,-26]
+  });
+}
+
+/* ============================================================
+   GROUPING — one marker per university, listing every visible
+   agreement for it (handles "multiple agreements" requirement)
+   ============================================================ */
+function groupByLocation(agreements){
+  var map = new Map();
+  agreements.forEach(function(a){
+    var key = (a.university.toLowerCase() + '|' + a.country.toLowerCase());
+    if (!map.has(key)) map.set(key, { university:a.university, country:a.country, agreements:[] });
+    map.get(key).agreements.push(a);
+  });
+  return Array.from(map.values());
+}
+
+function buildPopupHtml(loc){
+  var html = '<div class="popup-card">';
+  html += '<div class="popup-head">';
+  html += '<div class="popup-uni">' + escapeHtml(loc.university) + '</div>';
+  html += '<div class="popup-country">' + ICONS.pin.replace('<svg ', '<svg ') + '<span>' + escapeHtml(loc.country) + '</span></div>';
+  html += '</div>';
+  loc.agreements.forEach(function(a){
+    html += '<div class="popup-agreement">';
+    html += '<span class="popup-agreement-badge">' + ICONS.signed + escapeHtml(a.status || 'Signed') + '</span>';
+    if (a.facultyCodes.length){
+      html += '<div class="popup-row"><div class="popup-row-label">Participating STU Faculties</div><div class="popup-chips">' +
+        a.facultyCodes.map(function(c){ return '<span class="popup-chip">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
+    }
+    if (a.mobilityCodes.length){
+      html += '<div class="popup-row"><div class="popup-row-label">Mobility Types</div><div class="popup-chips">' +
+        a.mobilityCodes.map(function(c){ return '<span class="popup-chip">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
+    }
+    if (a.levels.length){
+      html += '<div class="popup-row"><div class="popup-row-label">Study Levels</div><div class="popup-chips">' +
+        a.levels.map(function(l){ return '<span class="popup-chip">' + escapeHtml(l) + '</span>'; }).join('') + '</div></div>';
+    }
+    if (a.contactName){
+      html += '<div class="popup-row"><div class="popup-row-label">Contact Person</div><div class="popup-row-value popup-contact">' + escapeHtml(a.contactName) + '</div></div>';
+    }
+    if (a.contactEmail){
+      html += '<div class="popup-row"><div class="popup-row-label">Contact Email</div><div class="popup-row-value popup-contact"><a href="mailto:' + escapeHtml(a.contactEmail) + '">' + escapeHtml(a.contactEmail) + '</a></div></div>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderMarkers(){
+  initMap();
+  clusterGroup.clearLayers();
+  var locations = groupByLocation(filteredAgreements);
+  var icon = pinDivIcon();
+  var latLngs = [];
+  locations.forEach(function(loc){
+    var base = countryCentroid(loc.country);
+    if (!base) return;
+
+    var lat = base[0];
+    var lng = base[1];
+    var marker = L.marker([lat, lng], { icon:icon });
+    marker.bindPopup(buildPopupHtml(loc), { maxWidth:320, className:'iia-popup' });
+    clusterGroup.addLayer(marker);
+    latLngs.push([lat, lng]);
+  });
+  if (latLngs.length){
+    mapEmptyOverlay.classList.add('hidden');
+    if (latLngs.length === 1){
+      map.setView(latLngs[0], 5);
+    } else {
+      map.fitBounds(L.latLngBounds(latLngs), { padding:[36,36], maxZoom:6 });
+    }
+  } else {
+    mapEmptyOverlay.classList.remove('hidden');
+  }
+}
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+function animateValue(el, to){
+  var startTime = null; var duration = 750;
+  function tick(now){
+    if (startTime===null) startTime = now;
+    var progress = Math.min((now-startTime)/duration, 1);
+    var eased = 1-Math.pow(1-progress,3);
+    el.textContent = Math.round(to*eased).toLocaleString();
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function renderCards(){
+  var countries = new Set(allAgreements.map(function(a){return a.country.toLowerCase();}));
+  var unis = new Set(allAgreements.map(function(a){return a.university.toLowerCase();}));
+  var defs = [
+    { key:'signed',  label:'Signed Agreements',    icon:ICONS.signed,   varc:'--status-signed', value:allAgreements.length },
+    { key:'countries', label:'Countries',           icon:ICONS.globe,    varc:'--accent',        value:countries.size },
+    { key:'unis',    label:'Partner Universities',  icon:ICONS.building, varc:'--gold',           value:unis.size },
+    { key:'visible', label:'Visible Agreements',    icon:ICONS.eye,      varc:'--status-progress',value:filteredAgreements.length }
+  ];
+  cardsSection.innerHTML = defs.map(function(d){
+    return '<div class="stat-card">' +
+      '<div class="stat-icon" style="color:var(' + d.varc + ');background:color-mix(in srgb, var(' + d.varc + ') 14%, transparent)">' + d.icon + '</div>' +
+      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + d.label + '</span></div>' +
+    '</div>';
+  }).join('');
+  defs.forEach(function(d){ animateValue(document.getElementById('val-'+d.key), d.value); });
+}
+function showSkeletons(){
+  cardsSection.innerHTML = [0,1,2,3].map(function(){ return '<div class="skeleton skeleton-card"></div>'; }).join('');
+}
+
+/* ============================================================
+   FILTER PANEL RENDERING
+   ============================================================ */
+var facultyList = document.getElementById('facultyList');
+var mobilityList = document.getElementById('mobilityList');
+var levelList = document.getElementById('levelList');
+var facultyCountEl = document.getElementById('facultyCount');
+var mobilityCountEl = document.getElementById('mobilityCount');
+var levelCountEl = document.getElementById('levelCount');
+var searchInput = document.getElementById('searchInput');
+
+function buildFacultyList(){
+  var html = '<label class="filter-option all">' +
+    '<input type="checkbox" id="facultyAll" ' + (selectedFaculties.size===0 ? 'checked' : '') + '>' +
+    '<span>All Faculties</span></label><div class="filter-divider"></div>';
+  html += FACULTY_DEFS.map(function(f){
+    return '<label class="filter-option"><input type="checkbox" data-faculty="' + f.code + '" ' + (selectedFaculties.has(f.code) ? 'checked' : '') + '><span>' + escapeHtml(f.label) + '</span></label>';
+  }).join('');
+  facultyList.innerHTML = html;
+  document.getElementById('facultyAll').addEventListener('change', function(){
+    selectedFaculties.clear();
+    buildFacultyList();
+    onFilterChange();
+  });
+  Array.prototype.forEach.call(facultyList.querySelectorAll('[data-faculty]'), function(cb){
+    cb.addEventListener('change', function(){
+      var code = cb.getAttribute('data-faculty');
+      if (cb.checked) selectedFaculties.add(code); else selectedFaculties.delete(code);
+      buildFacultyList();
+      onFilterChange();
+    });
+  });
+  facultyCountEl.textContent = selectedFaculties.size === 0 ? 'All' : String(selectedFaculties.size);
+}
+function buildMobilityList(){
+  mobilityList.innerHTML = MOBILITY_DEFS.map(function(m){
+    return '<label class="filter-option"><input type="checkbox" data-mobility="' + m.code + '" ' + (selectedMobility.has(m.code) ? 'checked' : '') + '><span>' + escapeHtml(m.label) + '</span></label>';
+  }).join('');
+  Array.prototype.forEach.call(mobilityList.querySelectorAll('[data-mobility]'), function(cb){
+    cb.addEventListener('change', function(){
+      var code = cb.getAttribute('data-mobility');
+      if (cb.checked) selectedMobility.add(code); else selectedMobility.delete(code);
+      mobilityCountEl.textContent = selectedMobility.size === 0 ? 'All' : String(selectedMobility.size);
+      onFilterChange();
+    });
+  });
+  mobilityCountEl.textContent = selectedMobility.size === 0 ? 'All' : String(selectedMobility.size);
+}
+function buildLevelList(){
+  levelList.innerHTML = LEVEL_DEFS.map(function(l){
+    return '<label class="filter-option"><input type="checkbox" data-level="' + l + '" ' + (selectedLevels.has(l) ? 'checked' : '') + '><span>' + escapeHtml(l) + '</span></label>';
+  }).join('');
+  Array.prototype.forEach.call(levelList.querySelectorAll('[data-level]'), function(cb){
+    cb.addEventListener('change', function(){
+      var l = cb.getAttribute('data-level');
+      if (cb.checked) selectedLevels.add(l); else selectedLevels.delete(l);
+      levelCountEl.textContent = selectedLevels.size === 0 ? 'All' : String(selectedLevels.size);
+      onFilterChange();
+    });
+  });
+  levelCountEl.textContent = selectedLevels.size === 0 ? 'All' : String(selectedLevels.size);
+}
+
+searchInput.addEventListener('input', function(){
+  searchQuery = searchInput.value.trim().toLowerCase();
+  onFilterChange();
+});
+
+function resetFilters(){
+  selectedFaculties.clear();
+  selectedMobility.clear();
+  selectedLevels.clear();
+  searchQuery = '';
+  searchInput.value = '';
+  buildFacultyList();
+  buildMobilityList();
+  buildLevelList();
+  onFilterChange();
+}
+document.getElementById('resetBtn').addEventListener('click', resetFilters);
+document.getElementById('emptyResetBtn').addEventListener('click', resetFilters);
+
+/* ============================================================
+   FILTERING
+   ============================================================ */
+function onFilterChange(){
+  filteredAgreements = allAgreements.filter(function(a){
+    if (selectedFaculties.size && !a.facultyCodes.some(function(c){ return selectedFaculties.has(c); })) return false;
+    if (selectedMobility.size && !a.mobilityCodes.some(function(c){ return selectedMobility.has(c); })) return false;
+    if (selectedLevels.size && !a.levels.some(function(l){ return selectedLevels.has(l); })) return false;
+    if (searchQuery && a.university.toLowerCase().indexOf(searchQuery) === -1 && a.country.toLowerCase().indexOf(searchQuery) === -1) return false;
+    return true;
+  });
+  renderCards();
+  renderMarkers();
+}
+
+/* ============================================================
+   EMPTY / ERROR STATES
+   ============================================================ */
+function showNoDataState(){
+  cardsSection.innerHTML = '';
+  mainSection.classList.add('hidden');
+  errorSection.innerHTML =
+    '<div class="error-card">' + ICONS.alert.replace('stroke-width="2"','') +
+    '<h3>No signed agreements yet</h3>' +
+    '<p>Once foreign partner universities have signed agreements, they will appear here automatically on the map.</p>' +
+    '</div>';
+}
+function showError(message){
+  cardsSection.innerHTML = '';
+  mainSection.classList.add('hidden');
+  errorSection.innerHTML =
+    '<div class="error-card">' + ICONS.alert +
+    '<h3>Couldn\'t load the map</h3>' +
+    '<p>' + escapeHtml(message) + '</p>' +
+    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>Try again</button>' +
+    '</div>';
+  document.getElementById('retryBtn').addEventListener('click', load);
+}
+
+/* ============================================================
+   LOAD — fetch applications ONCE, keep in memory, filter in JS
+   ============================================================ */
+function load(){
+  showSkeletons();
+  errorSection.innerHTML = '';
+  mainSection.classList.remove('hidden');
+  refreshBtn.classList.add('spinning');
+
+  apiGet('applications').then(function(raw){
+    var rows = extractList(raw);
+    var normalized = rows.map(normalizeApplication);
+
+    allAgreements = normalized.filter(function(a){
+      if (a.statusKey !== 'signed') return false;
+      if (a.country.toLowerCase() === 'slovakia') return false;
+      if (a.university.toLowerCase() === 'slovak university of technology in bratislava') return false;
+      if (!a.university || !a.country) return false;
+      return true;
+    });
+
+    if (!allAgreements.length){
+      showNoDataState();
+      return;
+    }
+
+    buildFacultyList();
+    buildMobilityList();
+    buildLevelList();
+    filteredAgreements = allAgreements.slice();
+    renderCards();
+    renderMarkers();
+    lastUpdatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }).catch(function(err){
+    console.error(err);
+    showError(err.message || 'Something went wrong while loading data.');
+  }).finally(function(){
+    refreshBtn.classList.remove('spinning');
+  });
+}
+
+refreshBtn.addEventListener('click', load);
+load();
+
+})();
+</script>
+</body>
+</html>

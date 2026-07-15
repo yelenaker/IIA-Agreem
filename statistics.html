@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Statistics · STU International Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
+:root{
+  --bg:#F6F7FB;
+  --surface:#FFFFFF;
+  --surface-sunken:#F0F1F5;
+  --border:#E3E6ED;
+  --border-strong:#CBD0DB;
+  --text:#14161F;
+  --text-secondary:#5B6072;
+  --text-tertiary:#8A8FA0;
+  --accent:#4954E6;
+  --accent-hover:#3B45D1;
+  --accent-soft:#EEF0FE;
+  --gold:#B8873A;
+  --gold-soft:#FBF1E1;
+  --amber:#C9821A;
+  --amber-soft:#FDF1DF;
+  --red:#D6373F;
+  --red-soft:#FCEAEB;
+  --shadow-sm:0 1px 2px 0 rgba(20,22,31,.05),0 1px 1px 0 rgba(20,22,31,.03);
+  --shadow-md:0 4px 10px -2px rgba(20,22,31,.08),0 2px 4px -2px rgba(20,22,31,.04);
+  --shadow-lg:0 16px 40px -12px rgba(20,22,31,.18);
+  --radius-sm:8px;
+  --radius:12px;
+  --radius-lg:18px;
+  --font-ui:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+  --status-new:#4954E6; --status-new-soft:#EEF0FE;
+  --status-progress:#C9821A; --status-progress-soft:#FDF1DF;
+  --status-signed:#B8873A; --status-signed-soft:#FBF1E1;
+  --status-rejected:#D6373F; --status-rejected-soft:#FCEAEB;
+}
+[data-theme="dark"]{
+  --bg:#0C0D12;
+  --surface:#15171F;
+  --surface-sunken:#10121A;
+  --border:#262A36;
+  --border-strong:#34394A;
+  --text:#EDEEF3;
+  --text-secondary:#A0A5B5;
+  --text-tertiary:#6B7080;
+  --accent:#7C86F2;
+  --accent-hover:#939CF5;
+  --accent-soft:#20244A;
+  --gold:#D9AE64;
+  --gold-soft:#2E2413;
+  --amber:#E0A542;
+  --amber-soft:#302710;
+  --red:#F0656C;
+  --red-soft:#361A1D;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+  --shadow-md:0 6px 16px rgba(0,0,0,.45);
+  --shadow-lg:0 24px 56px rgba(0,0,0,.6);
+  --status-new:#7C86F2; --status-new-soft:#20244A;
+  --status-progress:#E0A542; --status-progress-soft:#302710;
+  --status-signed:#D9AE64; --status-signed-soft:#2E2413;
+  --status-rejected:#F0656C; --status-rejected-soft:#361A1D;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,*::before,*::after{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-ui);
+  -webkit-font-smoothing:antialiased;
+  transition:background .25s ease,color .25s ease;
+  min-height:100vh;
+}
+h1,h2,h3,h4{margin:0;font-weight:700;letter-spacing:-.02em;}
+p{margin:0;}
+button{font-family:inherit;cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+::selection{background:var(--accent);color:#fff;}
+.hidden{display:none !important;}
+.muted{color:var(--text-tertiary);font-size:13px;}
+
+/* ============================================================
+   TOPBAR
+   ============================================================ */
+.topbar{
+  position:sticky;top:0;z-index:40;
+  display:flex;align-items:center;gap:24px;
+  padding:14px 28px;
+  background:color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex;align-items:center;gap:10px;margin-right:8px;}
+.brand-mark{width:32px;height:32px;flex:none;}
+.brand-text{display:flex;flex-direction:column;line-height:1.15;}
+.brand-name{font-weight:700;font-size:14.5px;}
+.brand-sub{font-size:11.5px;color:var(--text-tertiary);}
+.topbar-nav{display:flex;gap:4px;flex:1;}
+.nav-link{
+  padding:8px 14px;border-radius:8px;font-size:14px;font-weight:500;
+  color:var(--text-secondary);transition:background .15s,color .15s;
+}
+.nav-link:hover{background:var(--surface-sunken);color:var(--text);}
+.nav-link.active{background:var(--accent-soft);color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.icon-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text-secondary);
+  transition:border-color .15s,color .15s,transform .15s;
+}
+.icon-btn:hover{border-color:var(--border-strong);color:var(--text);}
+.icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.admin-link{
+  font-size:13px;font-weight:600;color:var(--text-secondary);
+  border:1px solid var(--border);border-radius:9px;padding:8px 12px;
+  transition:border-color .15s,color .15s;
+}
+.admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* ============================================================
+   PAGE LAYOUT
+   ============================================================ */
+.page{max-width:1200px;margin:0 auto;padding:32px 28px 64px;}
+.page-header{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  flex-wrap:wrap;gap:14px;margin-bottom:26px;
+}
+.page-header h1{font-size:26px;}
+.page-sub{color:var(--text-secondary);font-size:14.5px;margin-top:4px;}
+.page-actions{display:flex;align-items:center;gap:14px;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 14px;border-radius:9px;font-size:13.5px;font-weight:600;
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  transition:border-color .15s,transform .1s,background .15s;
+}
+.btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.btn:hover{border-color:var(--border-strong);}
+.btn:active{transform:scale(.97);}
+.btn.spinning svg{animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+.cards-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px;
+}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;display:flex;flex-direction:column;gap:14px;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,border-color .2s,transform .2s;
+}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.stat-icon{
+  width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+}
+.stat-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.stat-value{
+  font-family:var(--font-mono);font-size:28px;font-weight:600;letter-spacing:-.01em;display:block;
+}
+.stat-label{font-size:13px;color:var(--text-secondary);font-weight:500;}
+
+/* skeleton */
+.skeleton{position:relative;overflow:hidden;background:var(--surface-sunken);border-radius:var(--radius-lg);}
+.skeleton::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);
+  transform:translateX(-100%);animation:shimmer 1.4s infinite;
+}
+[data-theme="dark"] .skeleton::after{background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.06) 50%,transparent 70%);}
+@keyframes shimmer{100%{transform:translateX(100%);}}
+.skeleton-card{height:104px;border:1px solid var(--border);}
+.skeleton-chart{height:320px;border:1px solid var(--border);}
+
+/* ============================================================
+   CHARTS GRID
+   ============================================================ */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.chart-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:20px 20px 12px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;
+}
+.chart-card--wide{grid-column:1 / -1;}
+.chart-card-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+.chart-card-head h3{font-size:15px;}
+.chart-card-sub{font-size:12px;color:var(--text-tertiary);font-family:var(--font-mono);}
+.chart-canvas-wrap{position:relative;height:260px;}
+.chart-card--wide .chart-canvas-wrap{height:230px;}
+
+/* ============================================================
+   EMPTY / ERROR STATES
+   ============================================================ */
+.empty-state,.error-card{
+  grid-column:1/-1;background:var(--surface);border:1px dashed var(--border-strong);
+  border-radius:var(--radius-lg);padding:56px 24px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+.empty-state svg,.error-card svg{width:38px;height:38px;stroke:var(--text-tertiary);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+.error-card svg{stroke:var(--red);}
+.empty-state h3,.error-card h3{font-size:16px;}
+.empty-state p,.error-card p{color:var(--text-secondary);font-size:13.5px;max-width:420px;}
+.error-card .btn{margin-top:6px;}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:1000px){
+  .cards-grid{grid-template-columns:repeat(2,1fr);}
+  .charts-grid{grid-template-columns:1fr;}
+  .chart-card--wide{grid-column:auto;}
+}
+@media (max-width:640px){
+  .topbar{padding:12px 16px;gap:10px;}
+  .brand-sub{display:none;}
+  .topbar-nav{gap:2px;}
+  .nav-link{padding:7px 9px;font-size:13px;}
+  .page{padding:22px 16px 48px;}
+  .cards-grid{grid-template-columns:1fr 1fr;}
+  .page-header{align-items:flex-start;}
+}
+</style>
+</head>
+<body>
+<script>
+/* Apply theme before first paint to avoid flash-of-wrong-theme */
+(function(){
+  try{
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  }catch(e){}
+})();
+</script>
+
+<nav class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 32 32" fill="none">
+      <circle cx="16" cy="16" r="13" stroke="var(--accent)" stroke-width="2"/>
+      <path d="M16 3c3.6 3.4 5.6 8 5.6 13S19.6 25.6 16 29M16 3c-3.6 3.4-5.6 8-5.6 13S12.4 25.6 16 29" stroke="var(--accent)" stroke-width="1.4" opacity=".55"/>
+      <path d="M3 16h26" stroke="var(--accent)" stroke-width="1.4" opacity=".55"/>
+      <circle cx="16" cy="16" r="2.6" fill="var(--gold)"/>
+    </svg>
+    <div class="brand-text">
+      <span class="brand-name">STU International Office</span>
+      <span class="brand-sub">Inter-Institutional Agreements</span>
+    </div>
+  </div>
+  <div class="topbar-nav">
+    <a href="statistics.html" class="nav-link active">Statistics</a>
+    <a href="map.html" class="nav-link">Partner Map</a>
+    <a href="communication.html" class="nav-link">Communication</a>
+  </div>
+  <div class="topbar-right">
+    <a class="admin-link" href="communication.html">Admin sign in</a>
+    <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
+  </div>
+</nav>
+
+<main class="page">
+  <header class="page-header">
+    <div>
+      <h1>Statistics</h1>
+      <p class="page-sub">Live overview of Inter-Institutional Agreement applications</p>
+    </div>
+    <div class="page-actions">
+      <span id="lastUpdated" class="muted"></span>
+      <button id="refreshBtn" class="btn">
+        <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
+        Refresh
+      </button>
+    </div>
+  </header>
+
+  <section id="cardsSection" class="cards-grid" aria-label="Summary statistics"></section>
+  <section id="chartsSection" class="charts-grid" aria-label="Charts"></section>
+</main>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   CONFIG
+   ============================================================
+   This page talks only to the existing Google Apps Script API.
+   The backend is not modified — the frontend adapts to it.
+*/
+var API_BASE = "https://script.google.com/macros/s/AKfycbwrgoPNlVEGtdGamlAQDv8dsRWjH3u56cR7v9jiGEV1stJhH4mq_SmNLraV0fKE6VRU/exec";
+
+/* ============================================================
+   ICONS (inline, no external icon library)
+   ============================================================ */
+var ICONS = {
+  total:    '<svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5Z"/><path d="M3 13l9 5 9-5"/></svg>',
+  new:      '<svg viewBox="0 0 24 24"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg>',
+  signed:   '<svg viewBox="0 0 24 24"><path d="M12 2l2.3 1.4 2.6-.6.9 2.5 2.4 1.2-.9 2.5.9 2.5-2.4 1.2-.9 2.5-2.6-.6L12 22l-2.3-1.4-2.6.6-.9-2.5-2.4-1.2.9-2.5-.9-2.5 2.4-1.2.9-2.5 2.6.6L12 2Z"/><path d="M8.7 12.3l2.2 2.2 4.4-4.8"/></svg>',
+  progress: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.2v5l3.4 2"/></svg>',
+  rejected: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+  sun:      '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.4 4.4l1.8 1.8M17.8 17.8l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.4 19.6l1.8-1.8M17.8 6.2l1.8-1.8"/></svg>',
+  moon:     '<svg viewBox="0 0 24 24"><path d="M20 14.3A8.4 8.4 0 1 1 9.7 4a7 7 0 0 0 10.3 10.3Z"/></svg>',
+  alert:    '<svg viewBox="0 0 24 24"><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.4h.01"/></svg>',
+  inbox:    '<svg viewBox="0 0 24 24"><path d="M3 12l3-8h12l3 8"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 12h5l1.5 3h5L16 12h5"/></svg>'
+};
+
+/* ============================================================
+   THEME TOGGLE
+   ============================================================ */
+var themeToggle = document.getElementById('themeToggle');
+function paintThemeIcon(){
+  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  themeToggle.innerHTML = dark ? ICONS.sun : ICONS.moon;
+}
+themeToggle.addEventListener('click', function(){
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  paintThemeIcon();
+  if (window.__lastComputed) renderAllCharts(window.__lastComputed);
+});
+paintThemeIcon();
+
+/* ============================================================
+   GENERIC API + NORMALIZATION HELPERS
+   ------------------------------------------------------------
+   The backend's exact JSON key names could not be inspected
+   directly (script.google.com blocks automated fetches via
+   robots.txt), so every read goes through `pick()`, which
+   tries a list of likely key spellings (camelCase, spaced,
+   Slovak) before giving up. If your Apps Script uses different
+   key names, add them to the alias arrays below — nothing else
+   needs to change.
+   ============================================================ */
+function apiGet(action, params){
+  var url = new URL(API_BASE);
+  url.searchParams.set('action', action);
+  if (params) Object.keys(params).forEach(function(k){
+    if (params[k] !== undefined && params[k] !== null && params[k] !== '') url.searchParams.set(k, params[k]);
+  });
+  return fetch(url.toString(), { method:'GET' }).then(function(res){
+    if (!res.ok) throw new Error('The server responded with status ' + res.status + '.');
+    return res.json();
+  }).then(function(json){
+    if (json && json.error) throw new Error(json.error);
+    return json;
+  });
+}
+
+function pick(obj, keys){
+  if (!obj || typeof obj !== 'object') return undefined;
+  for (var i=0;i<keys.length;i++){ var k = keys[i]; if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k]; }
+  var lower = {};
+  Object.keys(obj).forEach(function(kk){ lower[kk.toLowerCase().replace(/[\s_]/g,'')] = obj[kk]; });
+  for (var j=0;j<keys.length;j++){
+    var norm = keys[j].toLowerCase().replace(/[\s_]/g,'');
+    if (lower[norm] !== undefined && lower[norm] !== null && lower[norm] !== '') return lower[norm];
+  }
+  return undefined;
+}
+
+function numOrCompute(rawVal, computeFn){
+  var n = Number(rawVal);
+  if (rawVal !== undefined && rawVal !== null && !isNaN(n)) return n;
+  return computeFn();
+}
+
+function splitMulti(value){
+  if (value === undefined || value === null) return [];
+  if (Array.isArray(value)) return value.map(function(v){return String(v).trim();}).filter(Boolean);
+  return String(value).split(',').map(function(v){return v.trim();}).filter(Boolean);
+}
+
+/* Normalizes many possible aggregate shapes into [{label,count}] */
+function toEntries(x){
+  if (!x) return [];
+  if (Array.isArray(x)){
+    return x.map(function(item){
+      if (Array.isArray(item)) return { label:String(item[0]), count:Number(item[1])||0 };
+      if (item && typeof item === 'object'){
+        var label = pick(item, ['label','name','key','country','faculty','status','type','level','month','year']);
+        var count = pick(item, ['count','value','total','applications']);
+        return { label:String(label||''), count:Number(count)||0 };
+      }
+      return { label:String(item), count:0 };
+    }).filter(function(e){ return e.label; });
+  }
+  if (typeof x === 'object'){
+    return Object.keys(x).map(function(k){ return { label:k, count:Number(x[k])||0 }; });
+  }
+  return [];
+}
+
+function extractList(raw){
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw.applications)) return raw.applications;
+  if (Array.isArray(raw.data)) return raw.data;
+  if (Array.isArray(raw.rows)) return raw.rows;
+  if (Array.isArray(raw.items)) return raw.items;
+  if (Array.isArray(raw.results)) return raw.results;
+  return [];
+}
+
+/* ------------------------------------------------------------
+   Status classification. The sheet uses Slovak status labels;
+   this also tolerates English equivalents in case the backend
+   translates them before sending.
+   ------------------------------------------------------------ */
+var STATUS_META = {
+  new:         { label:'New',         varName:'--status-new' },
+  in_progress: { label:'In Progress', varName:'--status-progress' },
+  signed:      { label:'Signed',      varName:'--status-signed' },
+  rejected:    { label:'Rejected',    varName:'--status-rejected' },
+  unknown:     { label:'Other',       varName:'--text-tertiary' }
+};
+function classifyStatus(raw){
+  var s = (raw||'').toString().trim();
+  if (!s) return 'unknown';
+  var low = s.toLowerCase();
+  if (low.indexOf('podp') !== -1 || low.indexOf('sign') !== -1) return 'signed';
+  if (low.indexOf('zamiet') !== -1 || low.indexOf('reject') !== -1) return 'rejected';
+  if (low.indexOf('nová') !== -1 || low.indexOf('nova') !== -1 || low === 'new') return 'new';
+  if (low.indexOf('pracuje') !== -1 || low.indexOf('poslan') !== -1 || low.indexOf('progress') !== -1 || low.indexOf('pending') !== -1) return 'in_progress';
+  return 'unknown';
+}
+
+function parseDate(v){
+  if (v === undefined || v === null || v === '') return null;
+  if (typeof v === 'number') return sheetsSerialToDate(v);
+  var s = String(v).trim();
+  if (/^\d+(\.\d+)?$/.test(s)){
+    var num = parseFloat(s);
+    if (num > 20000 && num < 60000) return sheetsSerialToDate(num);
+  }
+  var d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+function sheetsSerialToDate(num){
+  var ms = Math.round((num - 25569) * 86400 * 1000);
+  var d = new Date(ms);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function normalizeApplication(a){
+  var first = pick(a, ['firstName','First name']);
+  var last = pick(a, ['lastName','Last name']);
+  var applicant = pick(a, ['applicant','fullName','name','Applicant']) || [first,last].filter(Boolean).join(' ').trim();
+  var country = pick(a, ['country','Country','countryOfForeignInstitution','Country of foreign institution']);
+  var status = pick(a, ['status','Status']);
+  var date = pick(a, ['date','Date','timestamp','Timestamp','submittedAt','createdAt']);
+  return {
+    id: pick(a, ['id','ID','rowIndex','row']),
+    applicant: applicant || '—',
+    country: country || 'Unknown',
+    faculty: pick(a, ['faculty','Faculty','stuFaculty']),
+    mobilityType: pick(a, ['mobilityType','mobility','Mobility']),
+    studyLevel: pick(a, ['studyLevel','level','Study level']),
+    status: status,
+    statusKey: classifyStatus(status),
+    dateObj: parseDate(date)
+  };
+}
+
+function groupCount(list, keyFn){
+  var map = new Map();
+  list.forEach(function(item){
+    var keys = keyFn(item);
+    (Array.isArray(keys) ? keys : [keys]).forEach(function(k){
+      if (!k) return;
+      map.set(k, (map.get(k)||0)+1);
+    });
+  });
+  return Array.from(map, function(entry){ return { label:entry[0], count:entry[1] }; }).sort(function(a,b){ return b.count-a.count; });
+}
+function groupByYear(list){
+  var map = new Map();
+  list.forEach(function(a){ if (a.dateObj){ var y=a.dateObj.getFullYear(); map.set(y,(map.get(y)||0)+1); } });
+  return Array.from(map, function(e){ return { label:String(e[0]), count:e[1] }; }).sort(function(a,b){ return Number(a.label)-Number(b.label); });
+}
+var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function groupByMonth(list){
+  var map = new Map();
+  list.forEach(function(a){
+    if (a.dateObj){
+      var key = a.dateObj.getFullYear()+'-'+String(a.dateObj.getMonth()+1).padStart(2,'0');
+      map.set(key,(map.get(key)||0)+1);
+    }
+  });
+  return Array.from(map, function(e){ return { key:e[0], count:e[1] }; }).sort(function(a,b){ return a.key.localeCompare(b.key); })
+    .map(function(e){
+      var parts = e.key.split('-'); var label = MONTH_NAMES[Number(parts[1])-1] + ' ' + parts[0];
+      return { label:label, count:e.count };
+    });
+}
+function topNWithOther(entries, n){
+  if (entries.length <= n) return entries;
+  var head = entries.slice(0,n);
+  var rest = entries.slice(n).reduce(function(sum,e){return sum+e.count;},0);
+  return head.concat([{ label:'Other', count:rest }]);
+}
+
+/* ============================================================
+   COMPUTE — prefers ?action=statistics aggregates, falls back
+   to computing everything client-side from ?action=applications
+   so the page still works even if the aggregate endpoint's
+   shape differs from what's expected here.
+   ============================================================ */
+function computeAllStats(apps, stats){
+  var s = stats || {};
+  var total       = numOrCompute(pick(s,['totalApplications','total']), function(){ return apps.length; });
+  var newCount    = numOrCompute(pick(s,['newApplications','new']), function(){ return apps.filter(function(a){return a.statusKey==='new';}).length; });
+  var signed      = numOrCompute(pick(s,['signedAgreements','signed']), function(){ return apps.filter(function(a){return a.statusKey==='signed';}).length; });
+  var inProgress  = numOrCompute(pick(s,['agreementsInProgress','inProgress']), function(){ return apps.filter(function(a){return a.statusKey==='in_progress';}).length; });
+  var rejected    = numOrCompute(pick(s,['rejectedApplications','rejected']), function(){ return apps.filter(function(a){return a.statusKey==='rejected';}).length; });
+
+  function pref(statsKeys, computeFn, limitTop){
+    var entries = toEntries(pick(s, statsKeys));
+    if (!entries.length) entries = computeFn();
+    return limitTop ? topNWithOther(entries, limitTop) : entries;
+  }
+
+  return {
+    total:total, new:newCount, signed:signed, inProgress:inProgress, rejected:rejected,
+    byCountry:  pref(['byCountry','applicationsByCountry','countries'], function(){ return groupCount(apps, function(a){return a.country;}); }, 8),
+    byFaculty:  pref(['byFaculty','applicationsByFaculty','faculties'], function(){ return groupCount(apps, function(a){return splitMulti(a.faculty);}); }),
+    byMobility: pref(['byMobilityType','applicationsByMobilityType','mobilityTypes'], function(){ return groupCount(apps, function(a){return splitMulti(a.mobilityType);}); }),
+    byLevel:    pref(['byStudyLevel','applicationsByStudyLevel','studyLevels'], function(){ return groupCount(apps, function(a){return splitMulti(a.studyLevel);}); }),
+    byYear:     pref(['byYear','applicationsByYear'], function(){ return groupByYear(apps); }),
+    byMonth:    pref(['byMonth','monthlyApplications'], function(){ return groupByMonth(apps); }),
+    byStatus:   pref(['byStatus','statusDistribution'], function(){ return groupCount(apps, function(a){return STATUS_META[a.statusKey].label;}); }),
+    apps: apps
+  };
+}
+
+/* ============================================================
+   RENDER — cards
+   ============================================================ */
+var CARD_DEFS = [
+  { key:'total',      label:'Total Applications',      icon:'total',    varc:'--accent' },
+  { key:'new',        label:'New Applications',        icon:'new',      varc:'--status-new' },
+  { key:'signed',     label:'Signed Agreements',       icon:'signed',   varc:'--status-signed' },
+  { key:'inProgress', label:'Agreements in Progress',  icon:'progress', varc:'--status-progress' },
+  { key:'rejected',   label:'Rejected Applications',   icon:'rejected', varc:'--status-rejected' }
+];
+
+var cardsSection = document.getElementById('cardsSection');
+var chartsSection = document.getElementById('chartsSection');
+var lastUpdatedEl = document.getElementById('lastUpdated');
+var refreshBtn = document.getElementById('refreshBtn');
+
+function showSkeletons(){
+  cardsSection.innerHTML = CARD_DEFS.map(function(){ return '<div class="skeleton skeleton-card"></div>'; }).join('');
+  chartsSection.innerHTML = CHART_DEFS.map(function(c){ return '<div class="skeleton skeleton-chart' + (c.wide?' chart-card--wide':'') + '"></div>'; }).join('');
+}
+
+function animateValue(el, to){
+  var startTime = null; var duration = 850;
+  function tick(now){
+    if (startTime===null) startTime = now;
+    var progress = Math.min((now-startTime)/duration, 1);
+    var eased = 1-Math.pow(1-progress,3);
+    el.textContent = Math.round(to*eased).toLocaleString();
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function renderCards(c){
+  cardsSection.innerHTML = CARD_DEFS.map(function(d){
+    return '<div class="stat-card">' +
+      '<div class="stat-icon" style="color:var(' + d.varc + ');background:color-mix(in srgb, var(' + d.varc + ') 14%, transparent)">' + ICONS[d.icon] + '</div>' +
+      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + d.label + '</span></div>' +
+    '</div>';
+  }).join('');
+  CARD_DEFS.forEach(function(d){ animateValue(document.getElementById('val-'+d.key), c[d.key]); });
+}
+
+/* ============================================================
+   RENDER — charts
+   ============================================================ */
+var CHART_DEFS = [
+  { id:'chartCountry',  title:'Applications by Country',      sub:'top countries', type:'bar-h',   dataKey:'byCountry',  color:'--accent',         wide:true },
+  { id:'chartMonthly',  title:'Monthly Applications',          sub:'over time',     type:'line',    dataKey:'byMonth',    color:'--accent',         wide:true },
+  { id:'chartFaculty',  title:'Applications by Faculty',       sub:'STU faculties', type:'bar-h',   dataKey:'byFaculty',  color:'--status-signed' },
+  { id:'chartStatus',   title:'Status Distribution',           sub:'current state', type:'doughnut',dataKey:'byStatus',   color:null },
+  { id:'chartMobility', title:'Applications by Mobility Type', sub:'mobility',      type:'doughnut',dataKey:'byMobility', color:null },
+  { id:'chartLevel',    title:'Applications by Study Level',   sub:'study level',   type:'doughnut',dataKey:'byLevel',    color:null },
+  { id:'chartYear',     title:'Applications by Year',          sub:'yearly totals', type:'bar-v',   dataKey:'byYear',     color:'--gold' }
+];
+
+var STATUS_COLOR_BY_LABEL = { 'New':'--status-new','In Progress':'--status-progress','Signed':'--status-signed','Rejected':'--status-rejected','Other':'--text-tertiary' };
+var PALETTE = ['--accent','--gold','--amber','--red','--status-progress','--status-new','--status-signed','--status-rejected','--text-tertiary'];
+
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+var chartInstances = {};
+
+function buildChartsGrid(){
+  chartsSection.innerHTML = CHART_DEFS.map(function(c){
+    return '<div class="chart-card' + (c.wide?' chart-card--wide':'') + '">' +
+      '<div class="chart-card-head"><h3>' + c.title + '</h3><span class="chart-card-sub">' + c.sub + '</span></div>' +
+      '<div class="chart-canvas-wrap"><canvas id="' + c.id + '"></canvas></div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderAllCharts(computed){
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = cssVar('--text-secondary');
+  buildChartsGrid();
+  var gridColor = cssVar('--border');
+
+  CHART_DEFS.forEach(function(def){
+    if (chartInstances[def.id]) { chartInstances[def.id].destroy(); }
+    var entries = computed[def.dataKey] || [];
+    var ctx = document.getElementById(def.id).getContext('2d');
+    var labels = entries.map(function(e){return e.label;});
+    var values = entries.map(function(e){return e.count;});
+
+    if (!entries.length){
+      chartInstances[def.id] = null;
+      var wrap = ctx.canvas.parentElement;
+      wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:13px;">No data yet</div>';
+      return;
+    }
+
+    if (def.type === 'bar-h' || def.type === 'bar-v'){
+      var color = cssVar(def.color);
+      chartInstances[def.id] = new Chart(ctx, {
+        type:'bar',
+        data:{ labels:labels, datasets:[{ data:values, backgroundColor:color, borderRadius:6, maxBarThickness:28 }] },
+        options:{
+          indexAxis: def.type==='bar-h' ? 'y' : 'x',
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{ padding:10, cornerRadius:8 } },
+          scales:{
+            x:{ grid:{ color: def.type==='bar-h' ? gridColor : gridColor, drawTicks:false }, ticks:{ precision:0 } },
+            y:{ grid:{ display: def.type==='bar-h' ? false : true, color:gridColor, drawTicks:false }, ticks:{ precision:0 } }
+          }
+        }
+      });
+    } else if (def.type === 'line'){
+      var lineColor = cssVar(def.color);
+      chartInstances[def.id] = new Chart(ctx, {
+        type:'line',
+        data:{ labels:labels, datasets:[{
+          data:values, borderColor:lineColor, backgroundColor:lineColor+'22',
+          fill:true, tension:.35, pointRadius:3, pointBackgroundColor:lineColor, borderWidth:2.4
+        }]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{ padding:10, cornerRadius:8 } },
+          scales:{
+            x:{ grid:{ display:false }, ticks:{ maxRotation:0 } },
+            y:{ grid:{ color:gridColor, drawTicks:false }, ticks:{ precision:0 } }
+          }
+        }
+      });
+    } else if (def.type === 'doughnut'){
+      var colors = labels.map(function(l,i){
+        return cssVar(STATUS_COLOR_BY_LABEL[l] || PALETTE[i % PALETTE.length]);
+      });
+      chartInstances[def.id] = new Chart(ctx, {
+        type:'doughnut',
+        data:{ labels:labels, datasets:[{ data:values, backgroundColor:colors, borderWidth:0, hoverOffset:6 }]},
+        options:{
+          responsive:true, maintainAspectRatio:false, cutout:'62%',
+          plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, padding:12, font:{size:11.5} } }, tooltip:{ padding:10, cornerRadius:8 } }
+        }
+      });
+    }
+  });
+}
+
+/* ============================================================
+   EMPTY / ERROR STATES
+   ============================================================ */
+function showEmptyState(){
+  cardsSection.innerHTML = '';
+  chartsSection.innerHTML =
+    '<div class="empty-state">' + ICONS.inbox +
+    '<h3>No applications yet</h3>' +
+    '<p>Once responses start coming in through the Google Form, statistics will appear here automatically — no action needed.</p>' +
+    '</div>';
+}
+
+function showError(message){
+  cardsSection.innerHTML = '';
+  chartsSection.innerHTML =
+    '<div class="error-card">' + ICONS.alert +
+    '<h3>Couldn\'t load statistics</h3>' +
+    '<p>' + escapeHtml(message) + '</p>' +
+    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>Try again</button>' +
+    '</div>';
+  document.getElementById('retryBtn').addEventListener('click', load);
+}
+function escapeHtml(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+/* ============================================================
+   LOAD
+   ============================================================ */
+function load(){
+  showSkeletons();
+  refreshBtn.classList.add('spinning');
+  Promise.all([
+    apiGet('statistics').catch(function(){ return null; }),
+    apiGet('applications').catch(function(){ return null; })
+  ]).then(function(results){
+    var statsData = results[0];
+    var appsRaw = results[1];
+    var appsList = extractList(appsRaw).map(normalizeApplication);
+
+    if (!statsData && !appsRaw){
+      throw new Error('The Apps Script API could not be reached. Check the deployment URL and access settings.');
+    }
+    if (!appsList.length && !(statsData && Number(pick(statsData,['totalApplications','total'])) > 0)){
+      showEmptyState();
+      return;
+    }
+    var computed = computeAllStats(appsList, statsData);
+    window.__lastComputed = computed;
+    renderCards(computed);
+    renderAllCharts(computed);
+    lastUpdatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  }).catch(function(err){
+    console.error(err);
+    showError(err.message || 'Something went wrong while loading data.');
+  }).finally(function(){
+    refreshBtn.classList.remove('spinning');
+  });
+}
+
+refreshBtn.addEventListener('click', load);
+load();
+
+})();
+</script>
+</body>
+</html>
