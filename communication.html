@@ -1224,42 +1224,84 @@ function buildSubject(app, templateKey){
    assembled here directly from the Google Forms data on `app`, per the
    IMPORTANT LOGIC requirement that the AI never invents facts. */
 function buildFacultyBody(app, descriptionText){
-  var description = (descriptionText !== undefined ? descriptionText : (app.aiDescription || app.reason)) || '—';
-  var descClean = description.replace(/\.+\s*$/, ''); // trailing period stripped so we control punctuation below
+
+  var description =
+    (descriptionText !== undefined
+      ? descriptionText
+      : (app.aiDescription || app.reason)) || '—';
+
+  description = description.replace(/\.+\s*$/, '').trim();
 
   var lines = [];
+
   lines.push('Dobrý deň,');
   lines.push('');
 
-  var intro = 'Univerzita ' + (app.university || '—') + ', ' + (app.country || '—') +
+  var intro =
+    'Univerzita ' + (app.university || '—') +
+    ', ' + (app.country || '—') +
     ' prejavila záujem podpísať s Vašou fakultou Erasmus+ medzi-inštitucionálnu dohodu. ' +
-    'Ako dôvod záujmu o spoluprácu uviedli: ' + descClean + '.';
+    'Ako dôvod záujmu o spoluprácu uviedli: "' +
+    description +
+    '".';
 
-  var mobText = mobilitySentence(app);
-  if (mobText){
+  if (app.mobilityCodes.length) {
+
+    intro += ' Konkrétne majú záujem o ' + mobilitySentence(app);
+
     var levels = studyLevelsText(app);
-    intro += ' Konkrétne majú záujem o ' + mobText + (levels ? ' pre študentov na ' + levels + ' stupni štúdia.' : '.');
+
+    if (levels) {
+      intro += ' pre študentov na ' + levels + ' stupni štúdia';
+    }
+
+    intro += '.';
+
   }
+
   lines.push(intro);
 
-  if (app.overlaps && app.overlaps.length){
+  if (app.overlaps && app.overlaps.length) {
+
     lines.push('');
-    lines.push('Prieniky našli hlavne v týchto odboroch: ' + app.overlaps.join(', ') + '.');
+    lines.push(
+      'Prieniky našli hlavne v týchto odboroch: ' +
+      app.overlaps.join(', ') +
+      '.'
+    );
+
   }
 
-  if (meaningful(app.languageOther)){
+  if (meaningful(app.languageOther)) {
+
     lines.push('');
-    lines.push('V formulári na spoluprácu sme sa aj pýtali, či ich univerzita vyžaduje pre incoming študentov znalosť iných jazykov ako angličtiny. Uviedli v ňom, že „' + app.languageOther + '“.');
+    lines.push(
+      'V formulári na spoluprácu sme sa tiež pýtali, či ich univerzita vyžaduje pre incoming študentov alebo zamestnancov znalosť iného jazyka ako angličtiny.'
+    );
+
+    lines.push('');
+    lines.push(
+      'Uviedli, že:'
+    );
+
+    lines.push('');
+    lines.push(
+      '"' + app.languageOther + '"'
+    );
+
   }
 
   lines.push('');
-  lines.push('Ak by ste o túto spoluprácu mali záujem, dajte mi prosím vedieť v akom rozsahu. Prosím informujte ma aj v prípade, že o spoluprácu záujem nemáte.');
+  lines.push('Ak by ste o túto spoluprácu mali záujem, dajte mi prosím vedieť, v akom rozsahu.');
+  lines.push('Prosím, informujte ma aj v prípade, že o spoluprácu záujem nemáte.');
   lines.push('');
-  lines.push('Ďakujem,');
+  lines.push('Ďakujem.');
   lines.push('');
   lines.push('S pozdravom,');
   lines.push('Michal Ďuďák');
+
   return lines.join('\n');
+
 }
 function buildPartnerBody(app){
   var firstName = app.firstName || app.applicant || 'Sir/Madam';
@@ -1270,7 +1312,7 @@ function buildPartnerBody(app){
   lines.push('');
   lines.push('We will now forward the information you provided to the relevant faculties and departments at the Slovak University of Technology in Bratislava in order to assess potential academic cooperation.');
   lines.push('');
-  lines.push('If our faculties express interest in the proposed collaboration, we will contact you to begin preparing the Inter-Institutional Agreement.');
+  lines.push('If we receive interest from our faculties, we will contact you to proceed with the preparation of the Inter-Institutional Agreement.');
   lines.push('');
   lines.push('Thank you for your interest in cooperating with the Slovak University of Technology in Bratislava. We appreciate your patience during the internal evaluation process.');
   lines.push('');
