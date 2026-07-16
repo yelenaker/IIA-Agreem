@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 <style>
 /* ============================================================
@@ -128,8 +129,41 @@ a{color:inherit;text-decoration:none;}
   font-size:13px;font-weight:600;color:var(--text-secondary);
   border:1px solid var(--border);border-radius:9px;padding:8px 12px;
   transition:border-color .15s,color .15s;
+  background:none;
 }
 .admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* Signed-in profile chip (replaces "Admin sign in" after login) */
+.auth-area{display:flex;align-items:center;}
+.user-chip{
+  display:flex;align-items:center;gap:8px;
+  border:1px solid var(--border);border-radius:9px;
+  padding:5px 8px 5px 5px;background:var(--surface-sunken);
+}
+.user-avatar{
+  width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none;
+  background:var(--accent-soft);
+}
+.user-avatar-fallback{
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--accent);
+}
+.user-text{display:flex;flex-direction:column;line-height:1.2;max-width:150px;}
+.user-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:11px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{
+  font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;
+  padding:3px 7px;border-radius:6px;flex:none;
+}
+.role-badge.role-admin{background:var(--accent-soft);color:var(--accent);}
+.role-badge.role-viewer{background:var(--amber-soft);color:var(--amber);}
+.signout-btn{
+  font-size:11.5px;font-weight:600;color:var(--text-secondary);
+  border:1px solid var(--border);border-radius:7px;padding:5px 8px;
+  background:var(--surface);flex:none;
+  transition:border-color .15s,color .15s;
+}
+.signout-btn:hover{border-color:var(--border-strong);color:var(--text);}
 
 /* ============================================================
    PAGE LAYOUT
@@ -257,10 +291,15 @@ a{color:inherit;text-decoration:none;}
     <a href="communication.html" class="nav-link">Communication</a>
   </div>
   <div class="topbar-right">
-    <a class="admin-link" href="communication.html">Admin sign in</a>
+    <div id="authArea" class="auth-area">
+      <button type="button" class="admin-link" id="adminSignInBtn">Admin sign in</button>
+    </div>
+    <div id="gsiHiddenBtn" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-9999px;left:-9999px;"></div>
     <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
   </div>
 </nav>
+
+<script src="auth.js"></script>
 
 <main class="page">
   <header class="page-header">

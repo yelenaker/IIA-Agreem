@@ -1,0 +1,69 @@
+appsscript.json
+
+{
+  "timeZone": "Europe/Paris",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.external_request",
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/script.scriptapp",
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.compose",
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://mail.google.com/"
+  ],
+  "webapp": {
+    "executeAs": "USER_DEPLOYING",
+    "access": "ANYONE_ANONYMOUS"
+  }
+}
+
+Response.gs
+
+/**
+ * JSON Responses
+ */
+
+function jsonResponse(data) {
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+
+}
+
+function successResponse(data) {
+
+  return jsonResponse({
+
+    success: true,
+
+    timestamp: new Date(),
+
+    data
+
+  });
+
+}
+
+function errorResponse(message) {
+
+  return jsonResponse({
+
+    success: false,
+
+    timestamp: new Date(),
+
+    error: message
+
+  });
+
+}
+
+Router.gs
+Search.gs
+Statistics.gs
+TemplateService.gs
+Utils.gs

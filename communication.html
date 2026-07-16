@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 /* ============================================================
    DESIGN TOKENS — identical to statistics.html / map.html
@@ -128,8 +129,42 @@ input,textarea{font-family:inherit;}
   font-size:13px;font-weight:600;color:var(--text-secondary);
   border:1px solid var(--border);border-radius:9px;padding:8px 12px;
   transition:border-color .15s,color .15s;
+  background:none;
 }
 .admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* Signed-in profile chip (replaces "Admin sign in" after login) */
+.auth-area{display:flex;align-items:center;}
+.user-chip{
+  display:flex;align-items:center;gap:8px;
+  border:1px solid var(--border);border-radius:9px;
+  padding:5px 8px 5px 5px;background:var(--surface-sunken);
+}
+.user-avatar{
+  width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none;
+  background:var(--accent-soft);
+}
+.user-avatar-fallback{
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--accent);
+}
+.user-text{display:flex;flex-direction:column;line-height:1.2;max-width:150px;}
+.user-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-email{font-size:11px;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.role-badge{
+  font-size:10.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;
+  padding:3px 7px;border-radius:6px;flex:none;
+}
+.role-badge.role-admin{background:var(--accent-soft);color:var(--accent);}
+.role-badge.role-viewer{background:var(--amber-soft);color:var(--amber);}
+.signout-btn{
+  font-size:11.5px;font-weight:600;color:var(--text-secondary);
+  border:1px solid var(--border);border-radius:7px;padding:5px 8px;
+  background:var(--surface);flex:none;
+  transition:border-color .15s,color .15s;
+}
+.signout-btn:hover{border-color:var(--border-strong);color:var(--text);}
+[data-admin-only]:disabled{opacity:.5;cursor:not-allowed;}
 
 /* ============================================================
    PAGE LAYOUT
@@ -518,10 +553,15 @@ input,textarea{font-family:inherit;}
     <a href="communication.html" class="nav-link active">Communication</a>
   </div>
   <div class="topbar-right">
-    <a class="admin-link" href="communication.html">Admin sign in</a>
+    <div id="authArea" class="auth-area">
+      <button type="button" class="admin-link" id="adminSignInBtn">Admin sign in</button>
+    </div>
+    <div id="gsiHiddenBtn" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-9999px;left:-9999px;"></div>
     <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
   </div>
 </nav>
+
+<script src="auth.js"></script>
 
 <main class="page">
   <header class="page-header">
@@ -618,11 +658,11 @@ input,textarea{font-family:inherit;}
           </div>
 
           <div class="ai-actions" id="aiActionsRow">
-            <button id="btnCreateDescription" class="ai-btn">
+            <button id="btnCreateDescription" class="ai-btn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
               ✨ Create Description
             </button>
-            <button id="btnGenerateFacultyEmail" class="ai-btn">
+            <button id="btnGenerateFacultyEmail" class="ai-btn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
               ✨ Generate Faculty Email
             </button>
@@ -633,7 +673,7 @@ input,textarea{font-family:inherit;}
               <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
               Restore Generated Email
             </button>
-            <button id="btnSaveDraft" class="btn">
+            <button id="btnSaveDraft" class="btn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
               Save Draft
             </button>
@@ -645,7 +685,7 @@ input,textarea{font-family:inherit;}
               <svg viewBox="0 0 24 24"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>
               Preview
             </button>
-            <button id="btnSendEmail" class="btn btn-primary">
+            <button id="btnSendEmail" class="btn btn-primary" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
               Send Email
             </button>
@@ -675,7 +715,7 @@ input,textarea{font-family:inherit;}
     </div>
     <div class="modal-footer">
       <button class="btn" id="previewCloseBtn">Close</button>
-      <button class="btn btn-primary" id="previewSendBtn">
+      <button class="btn btn-primary" id="previewSendBtn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
         <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
         Send Email
       </button>
@@ -700,7 +740,7 @@ input,textarea{font-family:inherit;}
     </div>
     <div class="modal-footer">
       <button class="btn" id="sendCancelBtn">Cancel</button>
-      <button class="btn btn-primary" id="sendConfirmBtn">
+      <button class="btn btn-primary" id="sendConfirmBtn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
         <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
         Send
       </button>
@@ -753,6 +793,29 @@ var ICONS = {
 ThemeManager.initToggle('themeToggle', { sun: ICONS.sun, moon: ICONS.moon });
 
 /* ============================================================
+   ROLE-BASED UI GATING
+   ------------------------------------------------------------
+   Only an authorized Admin (see auth.js / AuthorizedUsers sheet)
+   may use the editing / AI / sending controls below. Everyone
+   else stays a read-only Viewer. This only controls the UI —
+   the real enforcement happens again on the backend for every
+   write action (saveDraft / deleteDraft / sendEmail / ai).
+   ============================================================ */
+function applyRolePermissions(){
+  var admin = !!(window.STUAuth && window.STUAuth.isAdmin());
+  document.querySelectorAll('[data-admin-only]').forEach(function(el){
+    el.disabled = !admin;
+  });
+}
+function isAdminOrWarn(){
+  if (window.STUAuth && window.STUAuth.isAdmin()) return true;
+  showToast('error', 'Sign in as an authorized admin to use this feature.');
+  return false;
+}
+document.addEventListener('stuauth:change', applyRolePermissions);
+applyRolePermissions();
+
+/* ============================================================
    GENERIC API + NORMALIZATION HELPERS
    (same resilient pattern used across the app: the backend's
    exact JSON key names may vary, so every read goes through
@@ -774,6 +837,7 @@ function apiGet(action, params){
 }
 function apiPost(action, payload){
   var body = Object.assign({ action:action }, payload || {});
+  if (window.STUAuth && window.STUAuth.getIdToken()) body.idToken = window.STUAuth.getIdToken();
   return fetch(API_BASE, {
     method:'POST',
     headers:{ 'Content-Type':'text/plain;charset=utf-8' },
@@ -1811,6 +1875,7 @@ function requestAiPolish(bodyText){
 }
 
 btnCreateDescription.addEventListener('click', function(){
+  if (!isAdminOrWarn()) return;
   var app = currentApp();
   if (!app) return;
   if (!app.reason){
@@ -1846,6 +1911,7 @@ btnCreateDescription.addEventListener('click', function(){
 });
 
 btnGenerateFacultyEmail.addEventListener('click', function(){
+  if (!isAdminOrWarn()) return;
   var app = currentApp();
   if (!app) return;
   if (state.activeTemplate !== 'faculty'){
@@ -1939,6 +2005,7 @@ function collectEmailState(){
 }
 
 document.getElementById('btnSaveDraft').addEventListener('click', function(){
+  if (!isAdminOrWarn()) return;
   var app = currentApp();
   if (!app) return;
   var draft = collectEmailState();
@@ -1986,6 +2053,7 @@ document.getElementById('previewSendBtn').addEventListener('click', function(){
 
 document.getElementById('btnSendEmail').addEventListener('click', openSendModal);
 function openSendModal(){
+  if (!isAdminOrWarn()) return;
   var app = currentApp();
   if (!app) return;
   var draft = collectEmailState();
@@ -2000,6 +2068,7 @@ function openSendModal(){
 
 var sendConfirmBtn = document.getElementById('sendConfirmBtn');
 sendConfirmBtn.addEventListener('click', function(){
+  if (!isAdminOrWarn()) return;
   var app = currentApp();
   if (!app) return;
   var draft = collectEmailState();
