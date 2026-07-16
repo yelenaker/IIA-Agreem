@@ -636,6 +636,10 @@ input,textarea{font-family:inherit;}
           </div>
 
           <div class="editor-actions">
+            <button id="btnRestoreGenerated" class="btn" disabled title="Restore the last automatically generated email">
+              <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
+              Restore Generated Email
+            </button>
             <button id="btnSaveDraft" class="btn">
               <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
               Save Draft
@@ -1713,6 +1717,7 @@ function setTemplate(key){
   state.currentDescriptionText = app.aiDescription || app.reason || '';
   paintRecipientsHint(composed);
   paintSourceRow(composed);
+  storeGeneratedEmail(composed.subject, composed.body);
 }
 /* The Create Description / Generate Faculty Email AI buttons only ever
    apply to the Faculty Coordinators workflow — hide them entirely for
@@ -1776,6 +1781,7 @@ function selectApp(id){
     state.currentDescriptionText = app.aiDescription || app.reason || '';
     paintRecipientsHint(composed);
     paintSourceRow(composed);
+    storeGeneratedEmail(composed.subject, composed.body);
   }
 }
 
@@ -1894,6 +1900,7 @@ btnGenerateFacultyEmail.addEventListener('click', function(){
       fieldBody.value = composed.body;
       paintRecipientsHint(composed);
       paintSourceRow(composed);
+      storeGeneratedEmail(composed.subject, composed.body);
       showToast('success', 'Faculty email generated from the application data.');
     })
     .catch(function(err){
@@ -1904,6 +1911,35 @@ btnGenerateFacultyEmail.addEventListener('click', function(){
       btnGenerateFacultyEmail.classList.remove('spinning');
       setAiButtonsDisabled(false);
     });
+});
+
+/* ============================================================
+   RESTORE GENERATED EMAIL
+   ------------------------------------------------------------
+   Keeps the last automatically generated (subject, body) pair in
+   memory so the user can revert manual edits without regenerating
+   or calling the AI again. Never touched while the user types —
+   only refreshed when a fresh email is actually generated.
+   ============================================================ */
+var generatedEmail = {
+  subject: '',
+  body: ''
+};
+var hasGeneratedEmail = false;
+var btnRestoreGenerated = document.getElementById('btnRestoreGenerated');
+
+function storeGeneratedEmail(subject, body){
+  generatedEmail.subject = subject;
+  generatedEmail.body = body;
+  hasGeneratedEmail = true;
+  btnRestoreGenerated.disabled = false;
+}
+
+btnRestoreGenerated.addEventListener('click', function(){
+  if (!hasGeneratedEmail) return;
+  fieldSubject.value = generatedEmail.subject;
+  fieldBody.value = generatedEmail.body;
+  showToast('success', 'Generated email restored.');
 });
 
 /* ============================================================
