@@ -63,7 +63,297 @@ function errorResponse(message) {
 }
 
 Router.gs
+
+/**
+ * Router.gs
+ * ------------------------------------------------------------
+ * FIXED — root cause of "doPost FAILED" / browser CORS errors:
+ *
+ * Google Apps Script Web Apps only send back the automatic
+ * Access-Control-Allow-Origin header when the function running
+ * behind doGet/doPost returns NORMALLY (i.e. via ContentService).
+ * If ANY code on the way throws an uncaught exception — a missing
+ * function, a bad request, GmailApp quota, an external API error,
+ * a malformed JSON body, etc. — Apps Script serves its own error
+ * page instead, and that page has NO CORS header at all. The
+ * browser then reports "blocked by CORS policy: No
+ * Access-Control-Allow-Origin header", even though the real
+ * problem is a server-side crash. That is exactly what the Apps
+ * Script "Executions" panel shows as doPost → FAILED.
+ *
+ * The fix is structural: routeRequest() now wraps everything in
+ * try/catch (including the JSON.parse of the POST body) so that
+ * no matter what goes wrong inside a handler, the function always
+ * returns a normal errorResponse() — which always carries the
+ * CORS header — instead of throwing. This is on top of removing
+ * the actual bugs that were causing the crashes (missing
+ * improveEmail / getEmailTemplates functions, an unguarded
+ * UrlFetchApp call to the AI provider, etc. — see AIService.gs,
+ * TemplateService.gs, EmailService.gs).
+ *
+ * Every existing action/case below is unchanged. New: "drafts",
+ * "draft" and "deleteDraft" (backing the Save Draft feature with
+ * real persistence in a "Drafts" sheet — see DraftService.gs).
+ * ------------------------------------------------------------
+ */
+
+function routeRequest(e) {
+
+  try {
+
+    let action = e.parameter.action || "";
+
+    let request = {};
+
+    if (e.postData && e.postData.contents) {
+
+      try {
+        request = JSON.parse(e.postData.contents);
+      } catch (parseErr) {
+        return errorResponse("Invalid JSON in request body: " + parseErr.message);
+      }
+
+      action = request.action || action;
+
+    }
+
+    switch (action) {
+
+      case "checkAuthorization":
+        return successResponse(
+          checkAuthorization(request.idToken)
+        );      
+      
+      case "applications":
+        return getApplications();
+
+      case "application":
+        return getApplication(e.parameter.id);
+
+      case "dashboard":
+        return getDashboard();
+
+      case "statistics":
+        return getStatistics();
+
+      case "map":
+        return getMapData();
+
+      case "faculties":
+        return getFaculties();
+
+      case "emailTemplates":
+        return getEmailTemplates();
+
+      case "sender":
+        return getSender();
+
+      case "saveDraft":
+        return saveDraft(request);
+
+      case "drafts":
+        return getDrafts();
+
+      case "draft":
+        return getDraft(e.parameter.id || request.applicationId);
+
+      case "deleteDraft":
+        return deleteDraft(request.applicationId || e.parameter.id);
+
+      case "search":
+        return searchApplications(e.parameter.q);
+
+      case "buildEmail":
+        return buildFacultyEmail(e.parameter.id);
+
+      case "buildPartnerEmail":
+        return buildPartnerEmail(e.parameter.id);
+
+      case "sendPartnerEmail":
+        return sendPartnerEmail(e.parameter.id);
+
+      case "sendEmail":
+        return sendFacultyEmail(request);
+
+      case "ai": {
+
+        switch (request.mode) {
+
+          case "description":
+            return successResponse(
+              generateAISummary(request.text)
+            );
+
+          case "polish":
+            return successResponse(
+              improveEmail(request.text)
+            );
+
+          default:
+            return errorResponse(
+              "Unknown AI mode: " + request.mode
+            );
+
+        }
+
+      }
+
+      default:
+        return errorResponse("Unknown API endpoint");
+
+    }
+
+  } catch (err) {
+
+    // Last line of defense: whatever broke above, always answer with a
+    // normal JSON response (so CORS headers are always present) instead
+    // of letting the exception reach the Apps Script runtime, which is
+    // what produced the "doPost FAILED" / CORS-looking browser errors.
+    return errorResponse(err && err.message ? err.message : String(err));
+
+  }
+
+}
+
 Search.gs
 Statistics.gs
 TemplateService.gs
-Utils.gs
+Auth.gs
+
+/**
+ * Auth.gs
+ * ------------------------------------------------------------
+ * Simple two-role authorization for the STU International Office
+ * app: Admin (listed + Active in the AuthorizedUsers sheet) or
+ * Viewer (everyone else). Google Sign-In on the frontend proves
+ * WHO the person is (their Google ID token); this file is what
+ * decides WHAT they're allowed to do, and it is the only place
+ * that decision may be trusted — never the frontend.
+ *
+ * Sheet expected: "AuthorizedUsers"
+ *   Column A: Email      Column B: Active (TRUE / FALSE)
+ *
+ * Add or remove an admin by editing that sheet — no code changes,
+ * no redeploy needed.
+ * ------------------------------------------------------------
+ */
+
+/* Must be the exact same OAuth Web client ID used in auth.js on
+   the frontend. Anthropic/Google Cloud Console → APIs & Services
+   → Credentials → OAuth 2.0 Client IDs. */
+var GOOGLE_CLIENT_ID = "1026351516868-ckgto5ppumua6m2htqcoeuubid3jrnkb.apps.googleusercontent.com";
+
+var AUTH_SHEET_NAME = "AuthorizedUsers";
+
+/**
+ * Verifies a Google ID token against Google's tokeninfo endpoint.
+ * Confirms it's a real, unexpired token issued for THIS app
+ * (matching aud === GOOGLE_CLIENT_ID) and that the email on it is
+ * verified by Google. Returns the decoded payload, or null if the
+ * token is missing, malformed, expired, or issued for another app.
+ */
+function verifyGoogleIdToken_(idToken) {
+  if (!idToken) return null;
+  try {
+    var resp = UrlFetchApp.fetch(
+      "https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(idToken),
+      { muteHttpExceptions: true }
+    );
+    if (resp.getResponseCode() !== 200) return null;
+    var payload = JSON.parse(resp.getContentText());
+
+    if (payload.aud !== GOOGLE_CLIENT_ID) return null;
+    if (!payload.email || payload.email_verified !== "true" && payload.email_verified !== true) return null;
+    if (payload.exp && Number(payload.exp) < (Date.now() / 1000)) return null;
+
+    return payload;
+  } catch (err) {
+    console.error("verifyGoogleIdToken_ failed: " + err);
+    return null;
+  }
+}
+
+/**
+ * Looks up an email in the AuthorizedUsers sheet. Only rows with
+ * Active === TRUE count as Admins; everything else (not present,
+ * or present but not Active) is a Viewer.
+ */
+function isAuthorizedAdmin_(email) {
+  if (!email) return false;
+  var normalized = String(email).trim().toLowerCase();
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(AUTH_SHEET_NAME);
+  if (!sheet) {
+    console.error("AuthorizedUsers sheet not found.");
+    return false;
+  }
+
+  var values = sheet.getDataRange().getValues(); // [ [Email, Active], ... ] including header row
+  for (var i = 1; i < values.length; i++) {
+    var rowEmail = String(values[i][0] || "").trim().toLowerCase();
+    if (rowEmail !== normalized) continue;
+    var active = values[i][1];
+    var isActive = active === true || String(active).trim().toUpperCase() === "TRUE";
+    return isActive;
+  }
+  return false;
+}
+
+/**
+ * PUBLIC — the endpoint the frontend calls right after Google
+ * Sign-In. Wire this into your action router, e.g.:
+ *
+ *   case 'checkAuthorization':
+ *     return successResponse(checkAuthorization(params.idToken));
+ *
+ * Never returns an error for an unauthorized user — an
+ * unauthorized/invalid token simply resolves to the Viewer role,
+ * exactly like a signed-out visitor.
+ */
+function checkAuthorization(idToken) {
+  var payload = verifyGoogleIdToken_(idToken);
+  if (!payload) {
+    return { authorized: false, role: "Viewer" };
+  }
+
+  var email = String(payload.email).toLowerCase();
+  var admin = isAuthorizedAdmin_(email);
+
+  return {
+    authorized: admin,
+    role: admin ? "Admin" : "Viewer",
+    email: email,
+    name: payload.name || "",
+    picture: payload.picture || ""
+  };
+}
+
+/**
+ * PUBLIC — call this at the very top of every state-changing
+ * endpoint (sendEmail, saveDraft, deleteDraft, ai, ...). Throws if
+ * the caller is not an authorized Admin; returns the verified
+ * email if they are, in case the handler wants to log who acted.
+ *
+ * Example integration in an existing handler:
+ *
+ *   function sendEmail(params) {
+ *     try {
+ *       requireAdmin(params.idToken);
+ *     } catch (err) {
+ *       return errorResponse('Access denied.');
+ *     }
+ *     ... existing sendEmail logic ...
+ *   }
+ *
+ * Do this for sendEmail, saveDraft, deleteDraft, and every AI
+ * action (mode:'description', mode:'polish', etc). Never skip
+ * this because the frontend already disables the button — the
+ * frontend can be bypassed; this cannot.
+ */
+function requireAdmin(idToken) {
+  var auth = checkAuthorization(idToken);
+  if (!auth.authorized) {
+    throw new Error("Access denied.");
+  }
+  return auth.email;
+}

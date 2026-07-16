@@ -757,15 +757,21 @@ input,textarea{font-family:inherit;}
 /* ============================================================
    CONFIG
    ============================================================
-   This page talks only to the existing Google Apps Script API.
-   The backend is not modified — the frontend adapts to it.
-   Actions used: 'applications' (existing, shared with the other
-   pages), plus best-effort optional actions ('faculties',
-   'emailTemplates', 'sender', 'drafts', 'saveDraft', 'deleteDraft',
-   'sendEmail', 'ai'). Every optional action degrades gracefully to
-   a sensible local fallback if the backend doesn't recognize it —
-   the same resilient pattern used throughout statistics.html /
-   map.html.
+   This page talks to the Google Apps Script API for everything
+   EXCEPT actually sending mail. Actions used: 'applications'
+   (existing, shared with the other pages), plus best-effort
+   optional actions ('faculties', 'emailTemplates', 'sender',
+   'drafts', 'saveDraft', 'deleteDraft', 'ai'). Every optional
+   action degrades gracefully to a sensible local fallback if the
+   backend doesn't recognize it — the same resilient pattern used
+   throughout statistics.html / map.html.
+
+   SENDING: mail is sent directly from this page to the Gmail REST
+   API (users/me/messages/send) using an OAuth access token scoped
+   to gmail.send, obtained from auth.js's requestGmailAccessToken().
+   Apps Script / GmailApp is no longer involved in sending at all —
+   every email goes out from the currently signed-in Admin's own
+   Google account. See buildMimeMessage() / sendGmailMessage() below.
 */
 var API_BASE = "https://script.google.com/macros/s/AKfycbwrgoPNlVEGtdGamlAQDv8dsRWjH3u56cR7v9jiGEV1stJhH4mq_SmNLraV0fKE6VRU/exec";
 
@@ -852,6 +858,61 @@ function apiPost(action, payload){
     return json;
   });
 }
+/* ============================================================
+   GMAIL SENDING (direct browser → Gmail REST API, no Apps Script)
+   ------------------------------------------------------------
+   buildMimeMessage() assembles an RFC 2822 message and returns it
+   base64url-encoded, ready for the Gmail API's { raw: ... } field.
+   Gmail always sends as the account that owns the access token —
+   whatever we put in "From" is cosmetic display text only, Gmail
+   will not let it impersonate another address — so the visible
+   sender is guaranteed to be the signed-in Admin.
+   ============================================================ */
+function encodeMimeHeaderWord(str){
+  str = String(str == null ? '' : str);
+  if (/^[\x00-\x7F]*$/.test(str)) return str; // pure ASCII — no encoding needed
+  return '=?UTF-8?B?' + btoa(unescape(encodeURIComponent(str))) + '?=';
+}
+function base64UrlEncode(str){
+  return btoa(unescape(encodeURIComponent(str)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+function wrapBase64Body(b64){
+  return b64.replace(/(.{76})/g, '$1\r\n');
+}
+function buildMimeMessage(opts){
+  var fromDisplay = opts.fromName ? encodeMimeHeaderWord(opts.fromName) + ' <' + opts.from + '>' : opts.from;
+  var toHeader = opts.to.join(', ');
+  var headers = [
+    'From: ' + fromDisplay,
+    'To: ' + toHeader,
+    'Subject: ' + encodeMimeHeaderWord(opts.subject),
+    'MIME-Version: 1.0',
+    'Content-Type: text/html; charset="UTF-8"',
+    'Content-Transfer-Encoding: base64'
+  ];
+  var body = wrapBase64Body(btoa(unescape(encodeURIComponent(opts.html))));
+  return headers.join('\r\n') + '\r\n\r\n' + body;
+}
+function sendGmailMessage(accessToken, mimeMessage){
+  return fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + accessToken,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ raw: base64UrlEncode(mimeMessage) })
+  }).then(function(res){
+    if (res.ok) return res.json();
+    return res.json().catch(function(){ return null; }).then(function(errBody){
+      var msg = (errBody && errBody.error && errBody.error.message) || ('Gmail API responded with status ' + res.status + '.');
+      throw new Error(msg);
+    });
+  });
+}
+
 function pick(obj, keys){
   if (!obj || typeof obj !== 'object') return undefined;
   for (var i=0;i<keys.length;i++){ var k = keys[i]; if (obj[k] !== undefined && obj[k] !== null && obj[k] !== '') return obj[k]; }
@@ -2072,19 +2133,26 @@ sendConfirmBtn.addEventListener('click', function(){
   var app = currentApp();
   if (!app) return;
   var draft = collectEmailState();
+  if (!window.STUAuth || typeof window.STUAuth.requestGmailAccessToken !== 'function'){
+    showToast('error', 'Gmail sending is unavailable — please reload the page.');
+    return;
+  }
   sendConfirmBtn.disabled = true;
   sendConfirmBtn.classList.add('spinning');
-  apiPost('sendEmail', {
-    applicationId: app.id,
-    template: draft.template,
-    recipients: draft.recipients,       // array — preferred if the backend accepts it
-    to: draft.recipientsText,           // comma-joined string — fallback for backends expecting a single string
-    subject: draft.subject,
-    body: draft.body,                   // plain text fallback
-    htmlBody: draft.bodyHtml            // full HTML email (body + signature) for GmailApp.sendEmail's htmlBody option
-  })
+  var admin = window.STUAuth.getUser();
+  window.STUAuth.requestGmailAccessToken()
+    .then(function(accessToken){
+      var mime = buildMimeMessage({
+        from: admin.email,
+        fromName: admin.name,
+        to: draft.recipients,
+        subject: draft.subject,
+        html: draft.bodyHtml
+      });
+      return sendGmailMessage(accessToken, mime);
+    })
     .then(function(){
-      showToast('success', 'Email sent to ' + draft.recipients.length + ' recipient(s).');
+      showToast('success', 'Email sent to ' + draft.recipients.length + ' recipient(s) from ' + admin.email + '.');
       delete state.drafts[app.id];
       renderCards();
       closeModal(sendOverlay);
@@ -2092,7 +2160,7 @@ sendConfirmBtn.addEventListener('click', function(){
     })
     .catch(function(err){
       console.error(err);
-      showToast('error', err.message || 'Could not send this email. Please try again.');
+      showToast('error', (err && err.message) || 'Could not send this email. Please try again.');
     })
     .finally(function(){
       sendConfirmBtn.disabled = false;
