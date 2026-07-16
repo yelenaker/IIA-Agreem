@@ -1625,10 +1625,26 @@ function renderList(){
   });
 }
 
-searchInput.addEventListener('input', function(){
-  state.searchQuery = searchInput.value.trim().toLowerCase();
-  onFilterChange();
-});
+
+function debounce(fn, wait){
+  var t;
+  return function(){
+    clearTimeout(t);
+    var args = arguments;
+    var ctx = this;
+    t = setTimeout(function(){
+      fn.apply(ctx, args);
+    }, wait);
+  };
+}
+
+searchInput.addEventListener('input', debounce(function(){
+
+    state.searchQuery = searchInput.value.trim().toLowerCase();
+
+    onFilterChange();
+
+},150));
 
 /* ---- date range filter ---- */
 var dateFilterBtn = document.getElementById('dateFilterBtn');

@@ -992,10 +992,25 @@ function buildLevelList(){
   levelCountEl.textContent = selectedLevels.size === 0 ? 'All' : String(selectedLevels.size);
 }
 
-searchInput.addEventListener('input', function(){
-  searchQuery = searchInput.value.trim().toLowerCase();
-  onFilterChange();
-});
+function debounce(fn, wait){
+  var t;
+  return function(){
+    clearTimeout(t);
+    var args = arguments;
+    var ctx = this;
+    t = setTimeout(function(){
+      fn.apply(ctx, args);
+    }, wait);
+  };
+}
+
+searchInput.addEventListener('input', debounce(function(){
+
+    searchQuery = searchInput.value.trim().toLowerCase();
+
+    onFilterChange();
+
+},150));
 
 function resetFilters(){
   selectedFaculties.clear();

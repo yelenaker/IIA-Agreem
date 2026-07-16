@@ -8,11 +8,7 @@ appsscript.json
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.external_request",
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/script.scriptapp",
-    "https://www.googleapis.com/auth/gmail.send",
-    "https://www.googleapis.com/auth/gmail.compose",
-    "https://www.googleapis.com/auth/gmail.modify",
-    "https://mail.google.com/"
+    "https://www.googleapis.com/auth/script.scriptapp"
   ],
   "webapp": {
     "executeAs": "USER_DEPLOYING",
@@ -20,204 +16,527 @@ appsscript.json
   }
 }
 
-Response.gs
+AlService.gs
+
 
 /**
- * JSON Responses
+ * AIService.gs
+ * Google Gemini implementation
  */
 
-function jsonResponse(data) {
+const GEMINI_MODEL = "gemini-flash-lite-latest";
 
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+function askAI(prompt) {
 
-}
+  const apiKey = PropertiesService
+    .getScriptProperties()
+    .getProperty("GEMINI_API_KEY");
 
-function successResponse(data) {
+  if (!apiKey) {
+    throw new Error(
+      "GEMINI_API_KEY script property is missing."
+    );
+  }
 
-  return jsonResponse({
+  const url =
+    "https://generativelanguage.googleapis.com/v1beta/models/" +
+    GEMINI_MODEL +
+    ":generateContent";
 
-    success: true,
+  const payload = {
 
-    timestamp: new Date(),
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: prompt
+          }
+        ]
+      }
+    ],
 
-    data
+    generationConfig: {
+      temperature: 0.4,
+      topP: 0.95,
+      topK: 40,
+      maxOutputTokens: 1024
+    }
+  };
 
-  });
-
-}
-
-function errorResponse(message) {
-
-  return jsonResponse({
-
-    success: false,
-
-    timestamp: new Date(),
-
-    error: message
-
-  });
-
-}
-
-Router.gs
-
-/**
- * Router.gs
- * ------------------------------------------------------------
- * FIXED — root cause of "doPost FAILED" / browser CORS errors:
- *
- * Google Apps Script Web Apps only send back the automatic
- * Access-Control-Allow-Origin header when the function running
- * behind doGet/doPost returns NORMALLY (i.e. via ContentService).
- * If ANY code on the way throws an uncaught exception — a missing
- * function, a bad request, GmailApp quota, an external API error,
- * a malformed JSON body, etc. — Apps Script serves its own error
- * page instead, and that page has NO CORS header at all. The
- * browser then reports "blocked by CORS policy: No
- * Access-Control-Allow-Origin header", even though the real
- * problem is a server-side crash. That is exactly what the Apps
- * Script "Executions" panel shows as doPost → FAILED.
- *
- * The fix is structural: routeRequest() now wraps everything in
- * try/catch (including the JSON.parse of the POST body) so that
- * no matter what goes wrong inside a handler, the function always
- * returns a normal errorResponse() — which always carries the
- * CORS header — instead of throwing. This is on top of removing
- * the actual bugs that were causing the crashes (missing
- * improveEmail / getEmailTemplates functions, an unguarded
- * UrlFetchApp call to the AI provider, etc. — see AIService.gs,
- * TemplateService.gs, EmailService.gs).
- *
- * Every existing action/case below is unchanged. New: "drafts",
- * "draft" and "deleteDraft" (backing the Save Draft feature with
- * real persistence in a "Drafts" sheet — see DraftService.gs).
- * ------------------------------------------------------------
- */
-
-function routeRequest(e) {
+  let response;
 
   try {
 
-    let action = e.parameter.action || "";
+    response = UrlFetchApp.fetch(url, {
 
-    let request = {};
+      method: "post",
 
-    if (e.postData && e.postData.contents) {
+      contentType: "application/json",
 
-      try {
-        request = JSON.parse(e.postData.contents);
-      } catch (parseErr) {
-        return errorResponse("Invalid JSON in request body: " + parseErr.message);
-      }
+      muteHttpExceptions: true,
 
-      action = request.action || action;
+      headers: {
+        "x-goog-api-key": apiKey
+      },
 
-    }
+      payload: JSON.stringify(payload)
 
-    switch (action) {
+    });
 
-      case "checkAuthorization":
-        return successResponse(
-          checkAuthorization(request.idToken)
-        );      
-      
-      case "applications":
-        return getApplications();
+  } catch (e) {
 
-      case "application":
-        return getApplication(e.parameter.id);
-
-      case "dashboard":
-        return getDashboard();
-
-      case "statistics":
-        return getStatistics();
-
-      case "map":
-        return getMapData();
-
-      case "faculties":
-        return getFaculties();
-
-      case "emailTemplates":
-        return getEmailTemplates();
-
-      case "sender":
-        return getSender();
-
-      case "saveDraft":
-        return saveDraft(request);
-
-      case "drafts":
-        return getDrafts();
-
-      case "draft":
-        return getDraft(e.parameter.id || request.applicationId);
-
-      case "deleteDraft":
-        return deleteDraft(request.applicationId || e.parameter.id);
-
-      case "search":
-        return searchApplications(e.parameter.q);
-
-      case "buildEmail":
-        return buildFacultyEmail(e.parameter.id);
-
-      case "buildPartnerEmail":
-        return buildPartnerEmail(e.parameter.id);
-
-      case "sendPartnerEmail":
-        return sendPartnerEmail(e.parameter.id);
-
-      case "sendEmail":
-        return sendFacultyEmail(request);
-
-      case "ai": {
-
-        switch (request.mode) {
-
-          case "description":
-            return successResponse(
-              generateAISummary(request.text)
-            );
-
-          case "polish":
-            return successResponse(
-              improveEmail(request.text)
-            );
-
-          default:
-            return errorResponse(
-              "Unknown AI mode: " + request.mode
-            );
-
-        }
-
-      }
-
-      default:
-        return errorResponse("Unknown API endpoint");
-
-    }
-
-  } catch (err) {
-
-    // Last line of defense: whatever broke above, always answer with a
-    // normal JSON response (so CORS headers are always present) instead
-    // of letting the exception reach the Apps Script runtime, which is
-    // what produced the "doPost FAILED" / CORS-looking browser errors.
-    return errorResponse(err && err.message ? err.message : String(err));
+    throw new Error(
+      "Could not reach Gemini: " + e.message
+    );
 
   }
 
+  const status = response.getResponseCode();
+  const body = response.getContentText();
+
+  let json;
+
+  try {
+
+    json = JSON.parse(body);
+
+  } catch (e) {
+
+    throw new Error(
+      "Gemini returned invalid JSON.\n\n" + body
+    );
+
+  }
+
+  if (status !== 200) {
+
+    const message =
+      json.error &&
+      json.error.message
+        ? json.error.message
+        : body;
+
+    throw new Error(message);
+
+  }
+
+  if (
+    !json.candidates ||
+    !json.candidates.length
+  ) {
+
+    throw new Error(
+      "Gemini returned no candidates."
+    );
+
+  }
+
+  const text =
+    json.candidates[0]
+      .content
+      .parts[0]
+      .text;
+
+  if (!text) {
+
+    throw new Error(
+      "Gemini returned an empty response."
+    );
+
+  }
+
+  return text.trim();
+
 }
 
-Search.gs
-Statistics.gs
-TemplateService.gs
+
+
+function generateAISummary(text) {
+
+  const prompt = `
+You are an Erasmus+ International Relations Officer at the Slovak University of Technology (STU).
+
+Your task is to improve ONLY the applicant's answer describing why they want to conclude an Inter-Institutional Agreement (IIA).
+
+Requirements:
+
+- Keep exactly the same meaning.
+- Do NOT invent new information.
+- Do NOT add facts that were not written by the applicant.
+- Correct grammar and awkward wording.
+- Rewrite the text into natural, professional English.
+- Combine short or fragmented ideas into one coherent paragraph.
+- Make it suitable for use inside an official email.
+- Maximum 3 sentences.
+- Return ONLY the rewritten description.
+- Do not use bullet points.
+- Do not mention STU unless the applicant already mentioned it.
+- In SLOVAK
+
+Applicant's answer:
+
+${text}
+`;
+
+  return askAI(prompt);
+
+}
+
+function improveEmail(text) {
+
+  const prompt = `
+You are an experienced Erasmus+ International Relations Officer at the Slovak University of Technology (STU).
+
+Your task is to polish an email that will be sent to Erasmus faculty coordinators.
+
+Requirements:
+
+- Preserve all facts.
+- Do NOT invent information.
+- Do NOT remove any information.
+- Keep the original language.
+- Improve grammar, spelling and punctuation.
+- Make the email sound natural, professional and friendly.
+- Improve sentence flow between paragraphs.
+- Rewrite awkward or repetitive sentences.
+- Make the text read like it was written by an experienced International Office coordinator.
+- Preserve all placeholders, university names, study levels, mobility types and email addresses exactly.
+- Return ONLY the improved email.
+- In SLOVAK
+
+Email:
+
+${text}
+`;
+
+  return askAI(prompt);
+
+}
+ 
+
+
+Application.gs
+
+/**
+ * GET /application?id=1
+ */
+
+function getApplication(id) {
+
+  const application = getApplicationById(id);
+
+  if (!application) {
+
+    return errorResponse("Application not found");
+
+  }
+
+  return successResponse(application);
+
+}
+
+
+ApplicationService.gs
+
+/**
+ * Application Service
+ * ------------------------------------------------------------
+ * EXTENDED — new fields added for Email.gs / AI.gs.
+ * Nothing below the "EXISTING CODE" marker was changed. Everything
+ * under "NEW — added for Communication Center" is additive:
+ * new helper functions + new keys appended to the object returned
+ * by mapApplication(). No existing field was removed or renamed.
+ *
+ * NOTE: Database.gs (getColumnMap / getHeaders / getRows) was left
+ * untouched, as instructed. The new fields below are resolved with
+ * their own header lookup (getExtendedColumnMap_) so nothing in
+ * Database.gs needs to change.
+ * ------------------------------------------------------------
+ */
+
+// ============================================================
+// EXISTING CODE (unchanged)
+// ============================================================
+
+function mapApplication(row, id) {
+
+  const col = getColumnMap();
+
+  const isSTUApplication =
+    String(row[col.university]).trim() ===
+    "Slovak University of Technology in Bratislava";
+
+  let university = row[col.university];
+  let faculty = row[col.faculty];
+  let mobility = row[col.mobility];
+  let studyLevel = row[col.studyLevel];
+  let position = row[col.position];
+
+  if (isSTUApplication) {
+
+    university = row[col.foreignUniversity];
+
+    faculty = row[col.foreignFaculty];
+
+    mobility = row[col.foreignMobility];
+
+    studyLevel = row[col.foreignStudyLevel];
+
+    position = row[col.foreignPosition];
+
+  }
+
+  let contactPerson = row[col.contactPerson];
+  let contactEmail = row[col.contactEmail];
+
+  if (!contactPerson) {
+
+    contactPerson =
+      `${row[col.firstName]} ${row[col.lastName]}`.trim();
+
+  }
+
+  if (!contactEmail) {
+
+    contactEmail = row[col.email];
+
+  }
+
+  // ==========================================================
+  // NEW — added for Communication Center (Email.gs / AI.gs)
+  // ==========================================================
+  const ext = getExtendedColumnMap_();
+
+  let reason = row[ext.purpose];
+  let erasmusCode = row[ext.erasmusCode];
+  // FIX (Bug 1): languageStudents / languageStaff / languageOther
+  // come from columns R/S/otherLanguage, which the form fills in
+  // regardless of application direction. They must NOT be blanked
+  // for STU_TO_FOREIGN applications — same reasoning already
+  // applied to erasmusCode below (redirect, don't discard).
+  let languageStudents = row[ext.englishStudents];
+  let languageStaff = row[ext.englishStaff];
+  let languageOther = row[ext.otherLanguage];
+  let bip = row[ext.bip];
+
+  if (isSTUApplication) {
+    // The U→AB block (fixed indexes) covers the STU→foreign
+    // direction of the form. It has its own purpose / erasmus code /
+    // "overlap" (BIP) fields, so those are redirected to the
+    // foreign-side columns — same pattern as erasmusCode.
+    reason = row[col.foreignPurpose];
+    erasmusCode = row[col.foreignErasmusCode];
+    bip = row[col.foreignOverlap];
+    // NOTE: languageStudents/languageStaff/languageOther are
+    // intentionally left as-is (from ext.englishStudents /
+    // ext.englishStaff / ext.otherLanguage) — those columns are
+    // shared across both directions of the form, unlike purpose/
+    // erasmusCode/bip which have dedicated STU-side columns.
+  }
+
+  const facultyCodes = extractFacultyCodes_(faculty);
+
+  return {
+
+    id: id,
+
+    timestamp: row[col.timestamp],
+
+    email: row[col.email],
+
+    firstName: row[col.firstName],
+
+    lastName: row[col.lastName],
+
+    fullName: `${row[col.firstName]} ${row[col.lastName]}`.trim(),
+
+    status: row[col.status],
+
+    phone: row[col.phone],
+
+    country: row[col.country],
+
+    university: university,
+
+    position: position,
+
+    faculty: faculty,
+
+    mobility: mobility,
+
+    studyLevel: studyLevel,
+
+    contactPerson: contactPerson,
+
+    contactEmail: contactEmail,
+
+    applicationType: isSTUApplication
+      ? "STU_TO_FOREIGN"
+      : "FOREIGN_TO_STU",
+
+    // ---- NEW fields (additive only) ----
+    reason: reason || '',
+    erasmusCode: erasmusCode || '',
+    languageStudents: languageStudents || '',
+    languageStaff: languageStaff || '',
+    languageOther: languageOther || '',
+    bip: bip || '',
+    facultyCodes: facultyCodes
+
+  };
+
+}
+
+
+function getAllApplications() {
+
+  const rows = getRows();
+
+  return rows.map((row, index) => mapApplication(row, index + 1));
+
+}
+
+
+function getApplicationById(id) {
+
+  const applications = getAllApplications();
+
+  return applications.find(app => app.id == id) || null;
+
+}
+
+// ============================================================
+// NEW — added for Communication Center (Email.gs / AI.gs)
+// ============================================================
+
+/**
+ * Resolves column indexes for the extra fields Email.gs / AI.gs
+ * need (applicant's stated reason, Erasmus code, language
+ * requirements, BIP flag) WITHOUT touching Database.gs's
+ * getColumnMap(). Tries several header spellings, then falls back
+ * to a loose substring match so small header edits in the Form
+ * don't silently break email generation.
+ */
+function getExtendedColumnMap_() {
+
+  const headers = getHeaders();
+
+  return {
+
+    purpose: findHeaderIndex_(headers, [
+      "Why are you interested in concluding the IIA with foreign university? Please specify the purpose of the IIA (i.e. for which types of mobility it is intended).",
+      "Why are you interested in concluding the IIA with foreign university?",
+      "Why are you interested in concluding the IIA",
+      "Purpose of the IIA"
+    ]),
+
+    erasmusCode: findHeaderIndex_(headers, [
+      "If applicable, Erasmus code of foreign institution",
+      "If applicable, Erasmus code of foreign instituion",
+      "Erasmus code of foreign institution",
+      "Erasmus code"
+    ]),
+
+    // FIX (Bug 2): the most specific candidate ("incoming students" /
+    // "incoming employees") must be tried BEFORE the generic
+    // "required level of English" phrase. Both headers share that
+    // generic phrase, so checking it first made englishStaff match
+    // the Students column (whichever header the loose-match loop
+    // reaches first). Trying the specific phrase first resolves each
+    // field to its own column; the generic phrase remains only as a
+    // last-resort fallback.
+    englishStudents: findHeaderIndex_(headers, [
+        "incoming students",
+        "required level of English"
+    ]),
+
+    englishStaff: findHeaderIndex_(headers, [
+        "incoming employees",
+        "required level of English"
+    ]),
+
+    otherLanguage: findHeaderIndex_(headers, [
+      "If your institution requires knowledge of a language other than English for incoming staff and students, please specify:"
+    ]),
+
+    bip: findHeaderIndex_(headers, [
+      "Would you like to include BIPs in the agreement?"
+    ])
+
+  };
+
+}
+
+/**
+ * Tries exact header matches first, then a case/whitespace-loose
+ * substring match. Returns -1 (never throws) if nothing matches,
+ * so a missing/renamed column degrades to an empty field instead
+ * of breaking application loading or email building.
+ */
+function findHeaderIndex_(headers, candidates) {
+
+  for (let i = 0; i < candidates.length; i++) {
+    const idx = headers.indexOf(candidates[i]);
+    if (idx !== -1) return idx;
+  }
+
+  const normalize = s => String(s).toLowerCase().replace(/\s+/g, ' ').trim();
+  const normCandidates = candidates.map(normalize);
+
+  for (let h = 0; h < headers.length; h++) {
+    const normHeader = normalize(headers[h]);
+    for (let c = 0; c < normCandidates.length; c++) {
+      if (normHeader.indexOf(normCandidates[c]) !== -1 ||
+          normCandidates[c].indexOf(normHeader) !== -1) {
+        return h;
+      }
+    }
+  }
+
+  return -1;
+
+}
+
+/**
+ * A single "faculty" answer can contain one or more faculties,
+ * e.g. "Faculty of Electrical Engineering and Information
+ * Technology (FEI), Faculty of Architecture and Design (FAD)".
+ * Extracts just the short codes: ["FEI", "FAD"].
+ * Also tolerates answers that are already bare codes ("FEI, FAD").
+ * Shared by ApplicationService.gs and Email.gs.
+ */
+function extractFacultyCodes_(facultyRaw) {
+
+  if (!facultyRaw) return [];
+
+  return String(facultyRaw)
+    .split(',')
+    .map(part => part.trim())
+    .filter(Boolean)
+    .map(part => {
+      const match = part.match(/\(([^)]+)\)/);
+      return (match ? match[1] : part).trim().toUpperCase();
+    });
+
+}
+
+
+Applications.gs
+
+/**
+ * GET /applications
+ */
+
+function getApplications() {
+
+  return successResponse(
+    getAllApplications()
+  );
+
+}
+
+
 Auth.gs
 
 /**
@@ -357,3 +676,1170 @@ function requireAdmin(idToken) {
   }
   return auth.email;
 }
+
+
+Code.gs
+
+function doGet(e) {
+  return routeRequest(e);
+}
+
+function doPost(e){
+
+  return routeRequest(e);
+
+}
+
+
+
+
+Config.gs
+
+/**
+ * Global configuration
+ */
+
+const CONFIG = {
+
+  SPREADSHEET_ID: SpreadsheetApp.getActiveSpreadsheet().getId(),
+
+  CACHE_TIME: 300,
+
+  DATE_FORMAT: "yyyy-MM-dd",
+
+  SHEETS: {
+
+  APPLICATIONS: "Odpovede z formulára 1",
+
+  FACULTIES: "Faculties",
+
+  EMAIL_TEMPLATE: "EmailTemplate",
+
+  DRAFTS: "Drafts"
+
+  },
+  
+  STATUS: {
+
+    NEW: "Nová žiadosť",
+
+    IN_PROGRESS: [
+      "Pracuje sa na podpise",
+      "Mailová žiadosť poslaná na fakulty/Zahraničnú uni"
+    ],
+
+    SIGNED: "Podpísané",
+
+    REJECTED: "Zamietnuté fakultami"
+
+  }
+
+};
+
+
+Dashboard.gs
+
+/**
+ * Dashboard Service
+ */
+
+function getDashboard() {
+
+  const applications = getAllApplications();
+
+  const dashboard = {
+
+    totalApplications: applications.length,
+
+    newApplications: 0,
+
+    signed: 0,
+
+    rejected: 0,
+
+    inProgress: 0,
+
+    recentApplications: applications
+      .slice()
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+      .slice(0, 5)
+
+  };
+
+  applications.forEach(app => {
+
+    if (app.status === CONFIG.STATUS.NEW)
+      dashboard.newApplications++;
+
+    else if (app.status === CONFIG.STATUS.SIGNED)
+      dashboard.signed++;
+
+    else if (app.status === CONFIG.STATUS.REJECTED)
+      dashboard.rejected++;
+
+    else if (CONFIG.STATUS.IN_PROGRESS.includes(app.status))
+      dashboard.inProgress++;
+
+  });
+
+  return successResponse(dashboard);
+
+}
+
+
+Database.gs
+
+/**
+ * Database Service
+ * 
+ * Database.gs
+ */
+
+function getApplicationsSheet() {
+
+  return SpreadsheetApp.getActiveSpreadsheet()
+    .getSheetByName(CONFIG.SHEETS.APPLICATIONS);
+
+}
+
+
+function getSheetData() {
+
+  const sheet = getApplicationsSheet();
+
+  return sheet.getDataRange().getValues();
+
+}
+
+
+function getHeaders() {
+
+  const data = getSheetData();
+
+  return data[0];
+
+}
+
+
+function getRows() {
+
+  const data = getSheetData();
+
+  data.shift();
+
+  return data;
+
+}
+
+
+/**
+ * Returns column indexes
+ */
+
+function getColumnMap() {
+
+  const headers = getHeaders();
+
+  return {
+
+    timestamp: headers.indexOf("Časová pečiatka"),
+
+    email: headers.indexOf("E-mailová adresa"),
+
+    firstName: headers.indexOf("First name"),
+
+    lastName: headers.indexOf("Last name"),
+
+    status: headers.indexOf("Status"),
+
+    phone: headers.indexOf("Phone number "),
+
+    country: headers.indexOf("Country of foreign institution"),
+
+    university: headers.indexOf("Your home university"),
+
+    position: headers.indexOf("Your current position"),
+
+    faculty: headers.indexOf("With which faculty would you like to conclude the IIA?  "),
+
+    mobility: headers.indexOf("What kind of mobility would you like to include in the agreement?"),
+
+    studyLevel: headers.indexOf("If applicable, what levels of study you want to include in the agreement? (For long term mobilities)"),
+
+    contactPerson: headers.indexOf("Name of person responsible for signing the inter institutional agreements at your institution? "),
+
+    contactEmail: headers.indexOf("E-mail of person responsible for signing the inter institutional agreements at your institution? "),
+
+    // NEW — reason for cooperation (STU-side, column J)
+    reasonPrimary: headers.indexOf("Why are you / your university interested in concluding the IIA with STU?"),
+
+    // NEW — required English level, column R
+    languageStudents: headers.indexOf("What is required level of English at your institution for incoming students?"),
+
+    // NEW — required English level, column S
+    languageStaff: headers.indexOf("What is required level of English at your institution for incoming employees?"),
+
+    // ===============================
+    // SECOND PART OF FORM (U → AB)
+    // Fixed indexes because Google Forms contains duplicate headers
+    // ===============================
+
+    // U
+    foreignUniversity: 20,
+
+    // V — erasmus code (used as erasmusCode)
+    foreignErasmusCode: 21,
+
+    // W
+    foreignPosition: 22,
+
+    // X — reason fallback (foreign-institution side)
+    foreignPurpose: 23,
+
+    // Y
+    foreignFaculty: 24,
+
+    // Z
+    foreignMobility: 25,
+
+    // AA — overlap/ISCED free text (distinct from Erasmus code)
+    foreignOverlap: 26,
+
+    // AB
+    foreignStudyLevel: 27
+
+    
+  };
+
+}
+
+
+DraftService.gs
+
+/**
+ * DraftService.gs
+ * ------------------------------------------------------------
+ * FIXED — saveDraft() used to be a stub that always returned a
+ * fake "Draft saved." response without writing anything anywhere.
+ * It didn't crash (so it wasn't a cause of the CORS symptom), but
+ * it also didn't actually save drafts — a refresh or a new session
+ * lost everything, which isn't acceptable for a production
+ * Communication Center.
+ *
+ * Since Google Sheets is the only database in this project, drafts
+ * are now persisted in a dedicated "Drafts" sheet (auto-created on
+ * first use, exactly like nothing else in the project needs to be
+ * touched for this). One row per applicationId; saving again for
+ * the same application updates that row instead of duplicating it.
+ *
+ * New functions: getDraftsSheet_ (private helper), getDrafts
+ * (list all — used by the "drafts" action so the frontend can
+ * restore drafts after a refresh), getDraft (single), deleteDraft
+ * (cleanup once an email is actually sent). saveDraft keeps its
+ * original name and signature — only its body changed.
+ * ------------------------------------------------------------
+ */
+
+const DRAFTS_HEADERS_ = ["ApplicationId", "Template", "Recipients", "Subject", "Body", "UpdatedAt"];
+
+/**
+ * Returns the Drafts sheet, creating it (with headers) on first use.
+ */
+function getDraftsSheet_() {
+
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+
+  let sheet = ss.getSheetByName(CONFIG.SHEETS.DRAFTS);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.SHEETS.DRAFTS);
+    sheet.appendRow(DRAFTS_HEADERS_);
+  }
+
+  return sheet;
+
+}
+
+/**
+ * Finds the 1-based row index (including the header row) of the
+ * draft for a given applicationId, or -1 if none exists yet.
+ */
+function findDraftRow_(sheet, applicationId) {
+
+  const values = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === String(applicationId)) {
+      return i + 1; // +1 because sheet rows are 1-based
+    }
+  }
+
+  return -1;
+
+}
+
+/**
+ * POST /saveDraft
+ * Body: { applicationId, template, recipients, subject, body }
+ * Creates or updates the single draft row for this application.
+ */
+function saveDraft(data) {
+
+  const applicationId = data && (data.applicationId || data.id);
+
+  if (!applicationId) {
+    return errorResponse("Missing applicationId.");
+  }
+
+  const sheet = getDraftsSheet_();
+
+  const rowData = [
+    applicationId,
+    (data.template || "").toString(),
+    (data.recipients || "").toString(),
+    (data.subject || "").toString(),
+    (data.body || "").toString(),
+    new Date()
+  ];
+
+  const existingRow = findDraftRow_(sheet, applicationId);
+
+  if (existingRow === -1) {
+    sheet.appendRow(rowData);
+  } else {
+    sheet.getRange(existingRow, 1, 1, rowData.length).setValues([rowData]);
+  }
+
+  return successResponse({
+    message: "Draft saved.",
+    applicationId: applicationId
+  });
+
+}
+
+/**
+ * GET /drafts
+ * Returns every saved draft, so the frontend can restore its
+ * in-memory state.drafts map after a page refresh.
+ */
+function getDrafts() {
+
+  const sheet = getDraftsSheet_();
+
+  const values = sheet.getDataRange().getValues();
+
+  values.shift(); // header row
+
+  const drafts = values
+    .filter(row => row[0] !== "" && row[0] !== null && row[0] !== undefined)
+    .map(row => ({
+      applicationId: row[0],
+      template: row[1],
+      recipients: row[2],
+      subject: row[3],
+      body: row[4],
+      updatedAt: row[5]
+    }));
+
+  return successResponse(drafts);
+
+}
+
+/**
+ * GET /draft?id=... (or POST with { applicationId })
+ * Returns the single saved draft for one application, if any.
+ */
+function getDraft(applicationId) {
+
+  if (!applicationId) {
+    return errorResponse("Missing applicationId.");
+  }
+
+  const sheet = getDraftsSheet_();
+
+  const values = sheet.getDataRange().getValues();
+
+  values.shift();
+
+  const row = values.find(r => String(r[0]) === String(applicationId));
+
+  if (!row) {
+    return errorResponse("No draft found for this application.");
+  }
+
+  return successResponse({
+    applicationId: row[0],
+    template: row[1],
+    recipients: row[2],
+    subject: row[3],
+    body: row[4],
+    updatedAt: row[5]
+  });
+
+}
+
+/**
+ * POST /deleteDraft
+ * Body: { applicationId }
+ * Removes the saved draft row, typically called right after an
+ * email is successfully sent so the draft doesn't linger.
+ * Always succeeds (even if there was nothing to delete) so the
+ * frontend's best-effort cleanup call never needs special-casing.
+ */
+function deleteDraft(applicationId) {
+
+  if (!applicationId) {
+    return successResponse({ deleted: false });
+  }
+
+  const sheet = getDraftsSheet_();
+
+  const rowIndex = findDraftRow_(sheet, applicationId);
+
+  if (rowIndex === -1) {
+    return successResponse({ deleted: false });
+  }
+
+  sheet.deleteRow(rowIndex);
+
+  return successResponse({ deleted: true });
+
+}
+
+
+EmailService.gs
+
+/**
+ * Email Service
+ * ------------------------------------------------------------
+ * FIXED (in addition to Router.gs's global try/catch):
+ *
+ * 1) buildFacultyEmail() used to do its own manual
+ *    .replace(/{{X}}/g, application.x) chain, with NO fallback
+ *    for missing values. If e.g. application.position was
+ *    undefined, {{POSITION}} was replaced with the literal text
+ *    "undefined" in a real e-mail sent to a faculty coordinator.
+ *    It now reuses the same replaceVariables() helper the partner
+ *    flow already used, which safely falls back to "" for every
+ *    field.
+ *
+ * 2) sendFacultyEmail() and sendPartnerEmail() now validate their
+ *    inputs (recipient e-mail format, required subject/body)
+ *    instead of handing bad data straight to GmailApp.sendEmail,
+ *    which would throw and crash the request. Multiple recipients
+ *    still all get the mail (unchanged loop), obviously malformed
+ *    addresses are now skipped and reported back instead of
+ *    aborting the whole send.
+ *
+ * Function names/signatures are unchanged, so nothing that calls
+ * into this file needs to change.
+ * ------------------------------------------------------------
+ */
+
+function replaceVariables(template, application) {
+
+  return template
+
+    .replace(/{{FULL_NAME}}/g, application.fullName || "")
+
+    .replace(/{{UNIVERSITY}}/g, application.university || "")
+
+    .replace(/{{COUNTRY}}/g, application.country || "")
+
+    .replace(/{{POSITION}}/g, application.position || "")
+
+    .replace(/{{FACULTY}}/g, application.faculty || "")
+
+    .replace(/{{MOBILITY}}/g, application.mobility || "")
+
+    .replace(/{{STUDY_LEVEL}}/g, application.studyLevel || "")
+
+    .replace(/{{EMAIL}}/g, application.email || "")
+
+    .replace(/{{CONTACT_PERSON}}/g, application.contactPerson || "");
+
+}
+
+/**
+ * Very small, deliberately permissive e-mail shape check — good
+ * enough to catch empty strings / obvious typos before handing
+ * them to GmailApp, without rejecting valid-but-unusual addresses.
+ */
+function isValidEmail_(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+}
+
+
+/**
+ * Send email to partner university
+ */
+
+function sendPartnerEmail(id) {
+
+  const application = getApplicationById(id);
+
+  if (!application) {
+    return errorResponse("Application not found");
+  }
+
+  const recipient = (application.contactEmail || application.email || "").toString().trim();
+
+  if (!isValidEmail_(recipient)) {
+    return errorResponse("No valid contact e-mail address found for this application.");
+  }
+
+  const template = getEmailTemplate("Partner");
+
+  const subject = template.subject;
+
+  const body = replaceVariables(template.body, application);
+
+  GmailApp.sendEmail(
+    recipient,
+    subject,
+    body
+  );
+
+  return successResponse({
+    message: "Partner email sent.",
+    sentTo: recipient
+  });
+
+}
+
+/**
+ * Send Faculty Email
+ * Accepts an array of recipients (preferred) or a comma-separated
+ * "to" string (fallback), matching what the Communication Center
+ * sends. Sends the same subject/body/htmlBody to every recipient —
+ * multiple recipients are fully supported.
+ */
+
+function sendFacultyEmail(request) {
+
+  if (!request || !request.applicationId) {
+    return errorResponse("Missing applicationId.");
+  }
+
+  const application = getApplicationById(request.applicationId);
+
+  if (!application) {
+    return errorResponse("Application not found");
+  }
+
+  let recipients = request.recipients;
+
+  if (!Array.isArray(recipients) || recipients.length === 0) {
+    recipients = String(request.to || "")
+      .split(",")
+      .map(e => e.trim())
+      .filter(Boolean);
+  }
+
+  recipients = recipients.map(e => String(e).trim()).filter(Boolean);
+
+  const validRecipients = recipients.filter(isValidEmail_);
+  const skippedRecipients = recipients.filter(e => !isValidEmail_(e));
+
+  if (validRecipients.length === 0) {
+    return errorResponse("No valid recipient e-mail addresses were provided.");
+  }
+
+  const subject = (request.subject || "").toString().trim();
+
+  if (!subject) {
+    return errorResponse("Subject is required.");
+  }
+
+  const plainBody = request.body || "";
+  const htmlBody = request.htmlBody || "";
+
+  if (!plainBody && !htmlBody) {
+    return errorResponse("Email body is required.");
+  }
+
+  const options = {};
+  if (htmlBody) {
+    options.htmlBody = htmlBody;
+  }
+
+  validRecipients.forEach(email => {
+
+    GmailApp.sendEmail(
+      email,
+      subject,
+      plainBody,
+      options
+    );
+
+  });
+
+  return successResponse({
+
+    sentTo: validRecipients,
+
+    skipped: skippedRecipients,
+
+    totalRecipients: validRecipients.length,
+
+    message: "Emails sent successfully."
+
+  });
+
+}
+
+/**
+ * Builds email from template
+ */
+
+function buildFacultyEmail(id) {
+
+  const application = getApplicationById(id);
+
+  if (!application) {
+
+    return errorResponse("Application not found");
+
+  }
+
+  const template = getEmailTemplate("Faculty");
+
+  const subject = template.subject;
+
+  const body = replaceVariables(template.body, application);
+
+  return successResponse({
+
+    subject,
+
+    body,
+
+    recipients: getFacultyEmails(application.faculty)
+
+  });
+
+}
+
+function buildPartnerEmail(id) {
+
+  const application = getApplicationById(id);
+
+  if (!application) {
+    return errorResponse("Application not found");
+  }
+
+  const template = getEmailTemplate("Partner");
+
+  const subject = template.subject;
+
+  const body = replaceVariables(template.body, application);
+
+  return successResponse({
+      subject,
+      body
+  });
+
+}
+
+
+FacultyService.gs
+
+/**
+ * Faculty Service
+ */
+
+function getFacultyEmails(facultyString) {
+
+  if (!facultyString) return [];
+
+  const sheet = SpreadsheetApp
+    .openById(CONFIG.SPREADSHEET_ID)
+    .getSheetByName(CONFIG.SHEETS.FACULTIES);
+
+  const data = sheet.getDataRange().getValues();
+
+  data.shift();
+
+  const selectedFaculties = facultyString
+    .split(/\s*,\s*/)
+    .map(f => f.trim());
+
+  const emails = [];
+
+  data.forEach(row => {
+
+    const faculty = String(row[0]).trim();
+
+    const email = row[2];
+
+    if (selectedFaculties.includes(faculty)) {
+
+      emails.push(email);
+
+    }
+
+  });
+
+  return [...new Set(emails)];
+
+}
+
+function getFaculties() {
+
+  const sheet = SpreadsheetApp
+    .openById(CONFIG.SPREADSHEET_ID)
+    .getSheetByName(CONFIG.SHEETS.FACULTIES);
+
+  const rows = sheet.getDataRange().getValues();
+
+  rows.shift();
+
+  const result = rows.map(r => ({
+    faculty: r[0],
+    coordinator: r[1],
+    email: r[2]
+  }));
+
+  return successResponse(result);
+
+}
+
+
+Map.gs
+
+/**
+ * GET /map
+ */
+
+function getMapData() {
+
+  const applications = getAllApplications();
+
+  const signed = applications.filter(app =>
+    app.status === CONFIG.STATUS.SIGNED
+  );
+
+  const data = signed.map(app => ({
+
+    university: app.university,
+
+    country: app.country,
+
+    faculty: app.faculty,
+
+    mobility: app.mobility,
+
+    studyLevel: app.studyLevel,
+
+    contactPerson: app.contactPerson,
+
+    contactEmail: app.contactEmail
+
+  }));
+
+  return successResponse(data);
+
+}
+
+
+Response.gs
+
+/**
+ * JSON Responses
+ */
+
+function jsonResponse(data) {
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+
+}
+
+function successResponse(data) {
+
+  return jsonResponse({
+
+    success: true,
+
+    timestamp: new Date(),
+
+    data
+
+  });
+
+}
+
+function errorResponse(message) {
+
+  return jsonResponse({
+
+    success: false,
+
+    timestamp: new Date(),
+
+    error: message
+
+  });
+
+}
+
+
+Router.gs
+
+/**
+ * Router.gs
+ * ------------------------------------------------------------
+ * FIXED — root cause of "doPost FAILED" / browser CORS errors:
+ *
+ * Google Apps Script Web Apps only send back the automatic
+ * Access-Control-Allow-Origin header when the function running
+ * behind doGet/doPost returns NORMALLY (i.e. via ContentService).
+ * If ANY code on the way throws an uncaught exception — a missing
+ * function, a bad request, an external API error, a malformed
+ * JSON body, etc. — Apps Script serves its own error page instead,
+ * and that page has NO CORS header at all. The browser then
+ * reports "blocked by CORS policy: No Access-Control-Allow-Origin
+ * header", even though the real problem is a server-side crash.
+ * That is exactly what the Apps Script "Executions" panel shows
+ * as doPost → FAILED.
+ *
+ * The fix is structural: routeRequest() now wraps everything in
+ * try/catch (including the JSON.parse of the POST body) so that
+ * no matter what goes wrong inside a handler, the function always
+ * returns a normal errorResponse() — which always carries the
+ * CORS header — instead of throwing.
+ *
+ * CHANGED — mail sending moved out of Apps Script entirely:
+ * emails are now sent directly from the browser to the Gmail
+ * REST API using each Admin's own OAuth access token (see
+ * auth.js: requestGmailAccessToken(), and communication.html:
+ * buildMimeMessage()/sendGmailMessage()). Apps Script keeps only
+ * Sheets, AI, drafts, statistics and authorization, per the
+ * GmailApp-based sendEmail / sendPartnerEmail routes below are
+ * intentionally removed — GmailApp used to send as the script
+ * owner's account, which is exactly what this change replaces.
+ * If something still posts to these actions (e.g. a stale cached
+ * page), it gets a clear error instead of silently sending mail
+ * from the wrong account.
+ * ------------------------------------------------------------
+ */
+
+function routeRequest(e) {
+
+  try {
+
+    let action = e.parameter.action || "";
+
+    let request = {};
+
+    if (e.postData && e.postData.contents) {
+
+      try {
+        request = JSON.parse(e.postData.contents);
+      } catch (parseErr) {
+        return errorResponse("Invalid JSON in request body: " + parseErr.message);
+      }
+
+      action = request.action || action;
+
+    }
+
+    switch (action) {
+
+      case "checkAuthorization":
+        return successResponse(
+          checkAuthorization(request.idToken)
+        );
+
+      case "applications":
+        return getApplications();
+
+      case "application":
+        return getApplication(e.parameter.id);
+
+      case "dashboard":
+        return getDashboard();
+
+      case "statistics":
+        return getStatistics();
+
+      case "map":
+        return getMapData();
+
+      case "faculties":
+        return getFaculties();
+
+      case "emailTemplates":
+        return getEmailTemplates();
+
+      case "sender":
+        return getSender();
+
+      case "saveDraft":
+        return saveDraft(request);
+
+      case "drafts":
+        return getDrafts();
+
+      case "draft":
+        return getDraft(e.parameter.id || request.applicationId);
+
+      case "deleteDraft":
+        return deleteDraft(request.applicationId || e.parameter.id);
+
+      case "search":
+        return searchApplications(e.parameter.q);
+
+      case "buildEmail":
+        return buildFacultyEmail(e.parameter.id);
+
+      case "buildPartnerEmail":
+        return buildPartnerEmail(e.parameter.id);
+
+      /* REMOVED: "sendEmail" and "sendPartnerEmail" used to call
+         GmailApp.sendEmail(), which always sends as the Apps
+         Script deployment owner, not the signed-in Admin. Sending
+         now happens client-side against the Gmail REST API
+         instead (see communication.html). Kept here only to give
+         a clear, actionable error if anything still calls them. */
+      case "sendEmail":
+      case "sendPartnerEmail":
+        return errorResponse(
+          "This app no longer sends email through Apps Script. Emails are sent " +
+          "directly from the signed-in Admin's own Google account via the Gmail " +
+          "API — please reload the page."
+        );
+
+      case "ai": {
+
+        switch (request.mode) {
+
+          case "description":
+            return successResponse(
+              generateAISummary(request.text)
+            );
+
+          case "polish":
+            return successResponse(
+              improveEmail(request.text)
+            );
+
+          default:
+            return errorResponse(
+              "Unknown AI mode: " + request.mode
+            );
+
+        }
+
+      }
+
+      default:
+        return errorResponse("Unknown API endpoint");
+
+    }
+
+  } catch (err) {
+
+    // Last line of defense: whatever broke above, always answer with a
+    // normal JSON response (so CORS headers are always present) instead
+    // of letting the exception reach the Apps Script runtime, which is
+    // what produced the "doPost FAILED" / CORS-looking browser errors.
+    return errorResponse(err && err.message ? err.message : String(err));
+
+  }
+
+}
+
+
+Search.gs
+
+/**
+ * GET /search?q=text
+ */
+
+function searchApplications(query) {
+
+  query = (query || "").toLowerCase().trim();
+
+  const applications = getAllApplications();
+
+  const results = applications.filter(app => {
+
+    return Object.values(app).some(value =>
+      String(value).toLowerCase().includes(query)
+    );
+
+  });
+
+  return successResponse(results);
+
+}
+
+
+SenderService.gs
+
+function getSender() {
+
+  return successResponse({
+
+    name: "Michal Dudák",
+
+    email: "michal.dudak@stuba.sk"
+
+  });
+
+}
+
+
+Statistics.gs
+
+/**
+ * GET /statistics
+ */
+
+function getStatistics() {
+
+  const applications = getAllApplications();
+
+  const statistics = {
+
+    totalApplications: applications.length,
+
+    byStatus: {},
+
+    byCountry: {},
+
+    byFaculty: {},
+
+    byMobility: {},
+
+    byStudyLevel: {}
+
+  };
+
+  applications.forEach(app => {
+
+    increment(statistics.byStatus, app.status);
+
+    increment(statistics.byCountry, app.country);
+
+    splitAndCount(statistics.byFaculty, app.faculty);
+
+    splitAndCount(statistics.byMobility, app.mobility);
+
+    splitAndCount(statistics.byStudyLevel, app.studyLevel);
+
+  });
+
+  return successResponse(statistics);
+
+}
+
+
+TemplateService.gs
+
+/**
+ * Template Service
+ * ------------------------------------------------------------
+ * FIXED — Router.gs's "emailTemplates" action called
+ * getEmailTemplates() (plural), but only getEmailTemplate(name)
+ * (singular) existed anywhere in the project. Calling the
+ * "emailTemplates" endpoint therefore always threw
+ * "ReferenceError: getEmailTemplates is not defined", crashing
+ * the request. Added below, additive only — getEmailTemplate()
+ * is untouched and still used exactly as before by
+ * buildFacultyEmail / buildPartnerEmail / sendPartnerEmail.
+ * ------------------------------------------------------------
+ */
+
+/**
+ * Returns email template by name
+ */
+
+function getEmailTemplate(templateName) {
+
+  const sheet = SpreadsheetApp
+    .openById(CONFIG.SPREADSHEET_ID)
+    .getSheetByName(CONFIG.SHEETS.EMAIL_TEMPLATE);
+
+  const rows = sheet.getDataRange().getValues();
+
+  rows.shift(); // Remove header
+
+  const row = rows.find(r => r[0] === templateName);
+
+  if (!row) {
+    throw new Error("Template not found: " + templateName);
+  }
+
+  return {
+    subject: row[1],
+    body: row[2]
+  };
+
+}
+
+/**
+ * GET /emailTemplates
+ * Returns every row of the EmailTemplate sheet as a flat list,
+ * e.g. [{ template:"Faculty", subject:"...", body:"..." },
+ *       { template:"Partner", subject:"...", body:"..." }].
+ * Used by the Communication Center to (optionally) override its
+ * local fallback templates with the live sheet content.
+ */
+function getEmailTemplates() {
+
+  const sheet = SpreadsheetApp
+    .openById(CONFIG.SPREADSHEET_ID)
+    .getSheetByName(CONFIG.SHEETS.EMAIL_TEMPLATE);
+
+  const rows = sheet.getDataRange().getValues();
+
+  rows.shift(); // Remove header
+
+  const templates = rows
+    .filter(r => r[0])
+    .map(r => ({
+      template: r[0],
+      subject: r[1],
+      body: r[2]
+    }));
+
+  return successResponse(templates);
+
+}
+
+
+Utils.gs
+
+/**
+ * Utility Functions
+ */
+
+function increment(object, key) {
+
+  if (!key) return;
+
+  key = String(key).trim();
+
+  object[key] = (object[key] || 0) + 1;
+
+}
+
+function splitAndCount(object, value) {
+
+  if (!value) return;
+
+  String(value)
+
+    .split(",")
+
+    .map(item => item.trim())
+
+    .filter(Boolean)
+
+    .forEach(item => increment(object, item));
+
+}
+
