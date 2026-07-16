@@ -528,7 +528,46 @@ input,textarea{font-family:inherit;}
   .page-header{align-items:flex-start;}
   .template-choice{flex-direction:column;}
   .editor-row label{width:60px;}
+  .topbar{
+      flex-wrap:wrap;
+      row-gap:8px;
+  }
+
+  .topbar-nav{
+      order:3;
+      flex:1 1 100%;
+      justify-content:space-between;
+  }
+
+  .nav-link{
+      flex:1;
+      text-align:center;
+  }
+
+  .toast-stack{
+      left:12px;
+      right:12px;
+      bottom:12px;
+      max-width:none;
+  }
 }
+
+@media (max-width:420px){
+
+    .cards-grid{
+        grid-template-columns:1fr;
+    }
+
+    .modal-overlay{
+        padding:10px;
+    }
+
+    .modal{
+        max-height:92vh;
+    }
+
+}
+
 </style>
 </head>
 <body>
