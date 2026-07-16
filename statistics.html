@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="theme.js"></script>
 <title>Statistics · STU International Office</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,7 +27,7 @@
   --accent-soft:#EEF0FE;
   --gold:#B8873A;
   --gold-soft:#FBF1E1;
-  --amber:#C9821A;
+  --amber:#1ac9c0;
   --amber-soft:#FDF1DF;
   --red:#D6373F;
   --red-soft:#FCEAEB;
@@ -40,7 +41,7 @@
   --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
   --status-new:#4954E6; --status-new-soft:#EEF0FE;
   --status-progress:#C9821A; --status-progress-soft:#FDF1DF;
-  --status-signed:#B8873A; --status-signed-soft:#FBF1E1;
+  --status-signed:#25b747; --status-signed-soft:#e1fbe1;
   --status-rejected:#D6373F; --status-rejected-soft:#FCEAEB;
 }
 [data-theme="dark"]{
@@ -57,7 +58,7 @@
   --accent-soft:#20244A;
   --gold:#D9AE64;
   --gold-soft:#2E2413;
-  --amber:#E0A542;
+  --amber:#42e0be;
   --amber-soft:#302710;
   --red:#F0656C;
   --red-soft:#361A1D;
@@ -66,7 +67,7 @@
   --shadow-lg:0 24px 56px rgba(0,0,0,.6);
   --status-new:#7C86F2; --status-new-soft:#20244A;
   --status-progress:#E0A542; --status-progress-soft:#302710;
-  --status-signed:#D9AE64; --status-signed-soft:#2E2413;
+  --status-signed:#64d97b; --status-signed-soft:#1d2e13;
   --status-rejected:#F0656C; --status-rejected-soft:#361A1D;
 }
 
@@ -235,15 +236,7 @@ a{color:inherit;text-decoration:none;}
 </style>
 </head>
 <body>
-<script>
-/* Apply theme before first paint to avoid flash-of-wrong-theme */
-(function(){
-  try{
-    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-  }catch(e){}
-})();
-</script>
+<!-- Theme is already applied before paint by theme.js, loaded in <head>. -->
 
 <nav class="topbar">
   <div class="brand">
@@ -316,21 +309,11 @@ var ICONS = {
 };
 
 /* ============================================================
-   THEME TOGGLE
+   THEME TOGGLE (persistence + icon logic shared via theme.js)
    ============================================================ */
-var themeToggle = document.getElementById('themeToggle');
-function paintThemeIcon(){
-  var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  themeToggle.innerHTML = dark ? ICONS.sun : ICONS.moon;
-}
-themeToggle.addEventListener('click', function(){
-  var html = document.documentElement;
-  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  paintThemeIcon();
+ThemeManager.initToggle('themeToggle', { sun: ICONS.sun, moon: ICONS.moon }, function(){
   if (window.__lastComputed) renderAllCharts(window.__lastComputed);
 });
-paintThemeIcon();
 
 /* ============================================================
    GENERIC API + NORMALIZATION HELPERS
