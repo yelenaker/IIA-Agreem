@@ -27,7 +27,7 @@
    (APIs & Services → Credentials → OAuth client ID → Web
    application). It must be the SAME client ID used in Auth.gs.
    ------------------------------------------------------------ */
-var GOOGLE_CLIENT_ID = "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com";
+var GOOGLE_CLIENT_ID = "1026351516868-ckgto5ppumua6m2htqcoeuubid3jrnkb.apps.googleusercontent.com";
 
 /* Same Apps Script web app URL every page already talks to. */
 var API_BASE = "https://script.google.com/macros/s/AKfycbwrgoPNlVEGtdGamlAQDv8dsRWjH3u56cR7v9jiGEV1stJhH4mq_SmNLraV0fKE6VRU/exec";
