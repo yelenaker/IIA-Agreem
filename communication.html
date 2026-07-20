@@ -1454,9 +1454,12 @@ function buildFacultyBody(app, descriptionText){
 
 }
 function buildPartnerBody(app){
-  var firstName = app.firstName || app.applicant || 'Sir/Madam';
+  var greetingName =
+      app.contactName ||
+      app.contactPerson ||
+      'Sir/Madam';
   var lines = [];
-  lines.push('Dear ' + firstName + ',');
+  lines.push('Dear ' + greetingName + ',');
   lines.push('');
   lines.push('Thank you for submitting your Inter-Institutional Agreement request form.');
   lines.push('');
