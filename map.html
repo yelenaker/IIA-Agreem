@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="theme.js"></script>
+<script src="i18n.js"></script>
 <title>Partner Map · STU International Office</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -137,6 +138,21 @@ input{font-family:inherit;}
   background:none;
 }
 .admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* Language switch (EN / SK) */
+.lang-switch{
+  display:flex;align-items:center;gap:2px;
+  border:1px solid var(--border);border-radius:9px;
+  padding:3px;background:var(--surface);flex:none;
+}
+.lang-switch-btn{
+  border:none;background:none;color:var(--text-secondary);
+  font-size:12px;font-weight:700;letter-spacing:.02em;
+  padding:5px 10px;border-radius:6px;line-height:1;
+  transition:background .15s,color .15s;
+}
+.lang-switch-btn:hover{color:var(--text);}
+.lang-switch-btn.active{background:var(--accent-soft);color:var(--accent);}
 
 /* Signed-in profile chip (replaces "Admin sign in" after login) */
 .auth-area{display:flex;align-items:center;}
@@ -460,20 +476,21 @@ input{font-family:inherit;}
     </svg>
     <div class="brand-text">
       <span class="brand-name">STU International Office</span>
-      <span class="brand-sub">Inter-Institutional Agreements</span>
+      <span class="brand-sub" data-i18n="common.brandSub">Inter-Institutional Agreements</span>
     </div>
   </div>
   <div class="topbar-nav">
-    <a href="index.html" class="nav-link">Statistics</a>
-    <a href="map.html" class="nav-link active">Partner Map</a>
-    <a href="communication.html" class="nav-link">Communication</a>
+    <a href="index.html" class="nav-link" data-i18n="common.nav.statistics">Statistics</a>
+    <a href="map.html" class="nav-link active" data-i18n="common.nav.map">Partner Map</a>
+    <a href="communication.html" class="nav-link" data-i18n="common.nav.communication">Communication</a>
   </div>
   <div class="topbar-right">
     <div id="authArea" class="auth-area">
-      <button type="button" class="admin-link" id="adminSignInBtn">Admin sign in</button>
+      <button type="button" class="admin-link" id="adminSignInBtn" data-i18n="common.adminSignIn">Admin sign in</button>
     </div>
     <div id="gsiHiddenBtn" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-9999px;left:-9999px;"></div>
-    <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
+    <div id="langSwitch"></div>
+    <button id="themeToggle" class="icon-btn" data-i18n-aria-label="common.themeToggleAria" aria-label="Toggle color theme"></button>
   </div>
 </nav>
 
@@ -482,48 +499,48 @@ input{font-family:inherit;}
 <main class="page">
   <header class="page-header">
     <div>
-      <h1>Partner Universities Map</h1>
-      <p class="page-sub">Explore all signed Inter-Institutional Agreements around the world.</p>
+      <h1 data-i18n="map.title">Partner Universities Map</h1>
+      <p class="page-sub" data-i18n="map.subtitle">Explore all signed Inter-Institutional Agreements around the world.</p>
     </div>
     <div class="page-actions">
       <span id="lastUpdated" class="muted"></span>
       <button id="refreshBtn" class="btn">
         <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
-        Refresh
+        <span data-i18n="common.refresh">Refresh</span>
       </button>
     </div>
   </header>
 
-  <section id="cardsSection" class="cards-grid" aria-label="Summary statistics"></section>
+  <section id="cardsSection" class="cards-grid" data-i18n-aria-label="map.aria.summary" aria-label="Summary statistics"></section>
 
-  <section id="mainSection" class="map-layout" aria-label="Map and filters">
+  <section id="mainSection" class="map-layout" data-i18n-aria-label="map.aria.mapAndFilters" aria-label="Map and filters">
     <div class="filter-col">
       <div class="filter-card">
-        <div class="filter-card-head"><h3>Search</h3></div>
+        <div class="filter-card-head"><h3 data-i18n="map.search.title">Search</h3></div>
         <div class="search-wrap">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="searchInput" class="search-input" placeholder="University or country…" autocomplete="off">
+          <input type="text" id="searchInput" class="search-input" data-i18n-placeholder="map.search.placeholder" placeholder="University or country…" autocomplete="off">
         </div>
       </div>
 
       <div class="filter-card">
-        <div class="filter-card-head"><h3>Faculty</h3><span class="filter-count" id="facultyCount">All</span></div>
+        <div class="filter-card-head"><h3 data-i18n="map.filters.faculty">Faculty</h3><span class="filter-count" id="facultyCount">All</span></div>
         <div class="filter-list" id="facultyList"></div>
       </div>
 
       <div class="filter-card">
-        <div class="filter-card-head"><h3>Mobility Type</h3><span class="filter-count" id="mobilityCount">All</span></div>
+        <div class="filter-card-head"><h3 data-i18n="map.filters.mobility">Mobility Type</h3><span class="filter-count" id="mobilityCount">All</span></div>
         <div class="filter-list" id="mobilityList"></div>
       </div>
 
       <div class="filter-card">
-        <div class="filter-card-head"><h3>Study Level</h3><span class="filter-count" id="levelCount">All</span></div>
+        <div class="filter-card-head"><h3 data-i18n="map.filters.level">Study Level</h3><span class="filter-count" id="levelCount">All</span></div>
         <div class="filter-list" id="levelList"></div>
       </div>
 
       <button id="resetBtn" class="btn btn-block reset-btn">
         <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
-        Reset Filters
+        <span data-i18n="common.resetFilters">Reset Filters</span>
       </button>
     </div>
 
@@ -532,9 +549,9 @@ input{font-family:inherit;}
       <div id="mapEmptyOverlay" class="map-empty-overlay hidden">
         <div class="empty-state">
           <svg viewBox="0 0 24 24"><path d="M3 12l3-8h12l3 8"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 12h5l1.5 3h5L16 12h5"/></svg>
-          <h3>No agreements match the selected filters.</h3>
-          <p>Try adjusting or clearing your filters to see more partner universities.</p>
-          <button id="emptyResetBtn" class="btn">Reset Filters</button>
+          <h3 data-i18n="map.empty.title">No agreements match the selected filters.</h3>
+          <p data-i18n="map.empty.desc">Try adjusting or clearing your filters to see more partner universities.</p>
+          <button id="emptyResetBtn" class="btn" data-i18n="common.resetFilters">Reset Filters</button>
         </div>
       </div>
     </div>
@@ -555,6 +572,15 @@ input{font-family:inherit;}
    performs all filtering client-side after a single fetch.
 */
 var API_BASE = "https://script.google.com/macros/s/AKfycby0Gcw_lb4r4cY1Pa4xhdclmt-tOfiAXNXQhmxgJB_YsR1DIMoV4nVD7OHIDiQftTnFig/exec";
+
+/* ============================================================
+   I18N — static markup is translated via data-i18n attributes;
+   dynamically generated content (cards, filters, popups,
+   empty/error states) is rebuilt on language change, further down.
+   ============================================================ */
+I18n.initLangSwitch('langSwitch');
+I18n.apply(document);
+document.title = I18n.t('map.docTitle');
 
 /* ============================================================
    ICONS
@@ -588,7 +614,12 @@ function apiGet(action, params){
     if (params[k] !== undefined && params[k] !== null && params[k] !== '') url.searchParams.set(k, params[k]);
   });
   return fetch(url.toString(), { method:'GET' }).then(function(res){
-    if (!res.ok) throw new Error('The server responded with status ' + res.status + '.');
+    if (!res.ok){
+      var e = new Error(I18n.t('common.serverStatusError', { status: res.status }));
+      e.i18nKey = 'common.serverStatusError';
+      e.i18nParams = { status: res.status };
+      throw e;
+    }
     return res.json();
   }).then(function(json){
     if (json && json.error) throw new Error(json.error);
@@ -881,24 +912,24 @@ function buildPopupHtml(loc){
   html += '</div>';
   loc.agreements.forEach(function(a){
     html += '<div class="popup-agreement">';
-    html += '<span class="popup-agreement-badge">' + ICONS.signed + escapeHtml(a.status || 'Signed') + '</span>';
+    html += '<span class="popup-agreement-badge">' + ICONS.signed + escapeHtml(a.status || I18n.t('map.popup.statusFallback')) + '</span>';
     if (a.facultyCodes.length){
-      html += '<div class="popup-row"><div class="popup-row-label">Participating STU Faculties</div><div class="popup-chips">' +
+      html += '<div class="popup-row"><div class="popup-row-label">' + escapeHtml(I18n.t('map.popup.faculties')) + '</div><div class="popup-chips">' +
         a.facultyCodes.map(function(c){ return '<span class="popup-chip">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
     }
     if (a.mobilityCodes.length){
-      html += '<div class="popup-row"><div class="popup-row-label">Mobility Types</div><div class="popup-chips">' +
+      html += '<div class="popup-row"><div class="popup-row-label">' + escapeHtml(I18n.t('map.popup.mobility')) + '</div><div class="popup-chips">' +
         a.mobilityCodes.map(function(c){ return '<span class="popup-chip">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
     }
     if (a.levels.length){
-      html += '<div class="popup-row"><div class="popup-row-label">Study Levels</div><div class="popup-chips">' +
+      html += '<div class="popup-row"><div class="popup-row-label">' + escapeHtml(I18n.t('map.popup.levels')) + '</div><div class="popup-chips">' +
         a.levels.map(function(l){ return '<span class="popup-chip">' + escapeHtml(l) + '</span>'; }).join('') + '</div></div>';
     }
     if (a.contactName){
-      html += '<div class="popup-row"><div class="popup-row-label">Contact Person</div><div class="popup-row-value popup-contact">' + escapeHtml(a.contactName) + '</div></div>';
+      html += '<div class="popup-row"><div class="popup-row-label">' + escapeHtml(I18n.t('map.popup.contactPerson')) + '</div><div class="popup-row-value popup-contact">' + escapeHtml(a.contactName) + '</div></div>';
     }
     if (a.contactEmail){
-      html += '<div class="popup-row"><div class="popup-row-label">Contact Email</div><div class="popup-row-value popup-contact"><a href="mailto:' + escapeHtml(a.contactEmail) + '">' + escapeHtml(a.contactEmail) + '</a></div></div>';
+      html += '<div class="popup-row"><div class="popup-row-label">' + escapeHtml(I18n.t('map.popup.contactEmail')) + '</div><div class="popup-row-value popup-contact"><a href="mailto:' + escapeHtml(a.contactEmail) + '">' + escapeHtml(a.contactEmail) + '</a></div></div>';
     }
     html += '</div>';
   });
@@ -953,15 +984,15 @@ function renderCards(){
   var countries = new Set(allAgreements.map(function(a){return a.country.toLowerCase();}));
   var unis = new Set(allAgreements.map(function(a){return a.university.toLowerCase();}));
   var defs = [
-    { key:'signed',  label:'Signed Agreements',    icon:ICONS.signed,   varc:'--status-signed', value:allAgreements.length },
-    { key:'countries', label:'Countries',           icon:ICONS.globe,    varc:'--accent',        value:countries.size },
-    { key:'unis',    label:'Partner Universities',  icon:ICONS.building, varc:'--gold',           value:unis.size },
-    { key:'visible', label:'Visible Agreements',    icon:ICONS.eye,      varc:'--status-progress',value:filteredAgreements.length }
+    { key:'signed',  i18nKey:'map.cards.signed',       icon:ICONS.signed,   varc:'--status-signed', value:allAgreements.length },
+    { key:'countries', i18nKey:'map.cards.countries',  icon:ICONS.globe,    varc:'--accent',        value:countries.size },
+    { key:'unis',    i18nKey:'map.cards.universities', icon:ICONS.building, varc:'--gold',           value:unis.size },
+    { key:'visible', i18nKey:'map.cards.visible',      icon:ICONS.eye,      varc:'--status-progress',value:filteredAgreements.length }
   ];
   cardsSection.innerHTML = defs.map(function(d){
     return '<div class="stat-card">' +
       '<div class="stat-icon" style="color:var(' + d.varc + ');background:color-mix(in srgb, var(' + d.varc + ') 14%, transparent)">' + d.icon + '</div>' +
-      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + d.label + '</span></div>' +
+      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + escapeHtml(I18n.t(d.i18nKey)) + '</span></div>' +
     '</div>';
   }).join('');
   defs.forEach(function(d){ animateValue(document.getElementById('val-'+d.key), d.value); });
@@ -984,7 +1015,7 @@ var searchInput = document.getElementById('searchInput');
 function buildFacultyList(){
   var html = '<label class="filter-option all">' +
     '<input type="checkbox" id="facultyAll" ' + (selectedFaculties.size===0 ? 'checked' : '') + '>' +
-    '<span>All Faculties</span></label><div class="filter-divider"></div>';
+    '<span>' + escapeHtml(I18n.t('map.filters.allFaculties')) + '</span></label><div class="filter-divider"></div>';
   html += FACULTY_DEFS.map(function(f){
     return '<label class="filter-option"><input type="checkbox" data-faculty="' + f.code + '" ' + (selectedFaculties.has(f.code) ? 'checked' : '') + '><span>' + escapeHtml(f.label) + '</span></label>';
   }).join('');
@@ -1002,7 +1033,7 @@ function buildFacultyList(){
       onFilterChange();
     });
   });
-  facultyCountEl.textContent = selectedFaculties.size === 0 ? 'All' : String(selectedFaculties.size);
+  facultyCountEl.textContent = selectedFaculties.size === 0 ? I18n.t('common.all') : String(selectedFaculties.size);
 }
 function buildMobilityList(){
   mobilityList.innerHTML = MOBILITY_DEFS.map(function(m){
@@ -1012,11 +1043,11 @@ function buildMobilityList(){
     cb.addEventListener('change', function(){
       var code = cb.getAttribute('data-mobility');
       if (cb.checked) selectedMobility.add(code); else selectedMobility.delete(code);
-      mobilityCountEl.textContent = selectedMobility.size === 0 ? 'All' : String(selectedMobility.size);
+      mobilityCountEl.textContent = selectedMobility.size === 0 ? I18n.t('common.all') : String(selectedMobility.size);
       onFilterChange();
     });
   });
-  mobilityCountEl.textContent = selectedMobility.size === 0 ? 'All' : String(selectedMobility.size);
+  mobilityCountEl.textContent = selectedMobility.size === 0 ? I18n.t('common.all') : String(selectedMobility.size);
 }
 function buildLevelList(){
   levelList.innerHTML = LEVEL_DEFS.map(function(l){
@@ -1026,11 +1057,11 @@ function buildLevelList(){
     cb.addEventListener('change', function(){
       var l = cb.getAttribute('data-level');
       if (cb.checked) selectedLevels.add(l); else selectedLevels.delete(l);
-      levelCountEl.textContent = selectedLevels.size === 0 ? 'All' : String(selectedLevels.size);
+      levelCountEl.textContent = selectedLevels.size === 0 ? I18n.t('common.all') : String(selectedLevels.size);
       onFilterChange();
     });
   });
-  levelCountEl.textContent = selectedLevels.size === 0 ? 'All' : String(selectedLevels.size);
+  levelCountEl.textContent = selectedLevels.size === 0 ? I18n.t('common.all') : String(selectedLevels.size);
 }
 
 function debounce(fn, wait){
@@ -1085,31 +1116,45 @@ function onFilterChange(){
 /* ============================================================
    EMPTY / ERROR STATES
    ============================================================ */
+var currentView = 'loading'; // 'loading' | 'nodata' | 'error' | 'data'
+var lastErrorInfo = null;
+var lastUpdatedDate = null;
+
 function showNoDataState(){
+  currentView = 'nodata';
   cardsSection.innerHTML = '';
   mainSection.classList.add('hidden');
   errorSection.innerHTML =
     '<div class="error-card">' + ICONS.alert.replace('stroke-width="2"','') +
-    '<h3>No signed agreements yet</h3>' +
-    '<p>Once foreign partner universities have signed agreements, they will appear here automatically on the map.</p>' +
+    '<h3>' + escapeHtml(I18n.t('map.noData.title')) + '</h3>' +
+    '<p>' + escapeHtml(I18n.t('map.noData.desc')) + '</p>' +
     '</div>';
 }
-function showError(message){
+function showError(info){
+  currentView = 'error';
+  lastErrorInfo = info;
+  var message = (info && info.i18nKey) ? I18n.t(info.i18nKey, info.i18nParams) : ((info && info.raw) || I18n.t('common.somethingWrong'));
   cardsSection.innerHTML = '';
   mainSection.classList.add('hidden');
   errorSection.innerHTML =
     '<div class="error-card">' + ICONS.alert +
-    '<h3>Couldn\'t load the map</h3>' +
+    '<h3>' + escapeHtml(I18n.t('map.error.title')) + '</h3>' +
     '<p>' + escapeHtml(message) + '</p>' +
-    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>Try again</button>' +
+    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>' + escapeHtml(I18n.t('common.tryAgain')) + '</button>' +
     '</div>';
   document.getElementById('retryBtn').addEventListener('click', load);
+}
+
+function renderLastUpdated(){
+  if (!lastUpdatedDate) return;
+  lastUpdatedEl.textContent = I18n.t('common.updatedAt', { time: lastUpdatedDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) });
 }
 
 /* ============================================================
    LOAD — fetch applications ONCE, keep in memory, filter in JS
    ============================================================ */
 function load(){
+  currentView = 'loading';
   showSkeletons();
   errorSection.innerHTML = '';
   mainSection.classList.remove('hidden');
@@ -1132,16 +1177,18 @@ function load(){
       return;
     }
 
+    currentView = 'data';
     buildFacultyList();
     buildMobilityList();
     buildLevelList();
     filteredAgreements = allAgreements.slice();
     renderCards();
     renderMarkers();
-    lastUpdatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    lastUpdatedDate = new Date();
+    renderLastUpdated();
   }).catch(function(err){
     console.error(err);
-    showError(err.message || 'Something went wrong while loading data.');
+    showError({ i18nKey: err.i18nKey, i18nParams: err.i18nParams, raw: err.message });
   }).finally(function(){
     refreshBtn.classList.remove('spinning');
   });
@@ -1149,6 +1196,25 @@ function load(){
 
 refreshBtn.addEventListener('click', load);
 load();
+
+/* ============================================================
+   I18N — react to a live language switch without reloading.
+   ============================================================ */
+I18n.onChange(function(){
+  document.title = I18n.t('map.docTitle');
+  if (currentView === 'data'){
+    buildFacultyList();
+    buildMobilityList();
+    buildLevelList();
+    renderCards();
+    renderMarkers();
+    renderLastUpdated();
+  } else if (currentView === 'nodata'){
+    showNoDataState();
+  } else if (currentView === 'error'){
+    showError(lastErrorInfo);
+  }
+});
 
 })();
 </script>

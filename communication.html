@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="theme.js"></script>
+<script src="i18n.js"></script>
 <title>Communication · STU International Office</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -132,6 +133,21 @@ input,textarea{font-family:inherit;}
   background:none;
 }
 .admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* Language switch (EN / SK) */
+.lang-switch{
+  display:flex;align-items:center;gap:2px;
+  border:1px solid var(--border);border-radius:9px;
+  padding:3px;background:var(--surface);flex:none;
+}
+.lang-switch-btn{
+  border:none;background:none;color:var(--text-secondary);
+  font-size:12px;font-weight:700;letter-spacing:.02em;
+  padding:5px 10px;border-radius:6px;line-height:1;
+  transition:background .15s,color .15s;
+}
+.lang-switch-btn:hover{color:var(--text);}
+.lang-switch-btn.active{background:var(--accent-soft);color:var(--accent);}
 
 /* Signed-in profile chip (replaces "Admin sign in" after login) */
 .auth-area{display:flex;align-items:center;}
@@ -583,20 +599,21 @@ input,textarea{font-family:inherit;}
     </svg>
     <div class="brand-text">
       <span class="brand-name">STU International Office</span>
-      <span class="brand-sub">Inter-Institutional Agreements</span>
+      <span class="brand-sub" data-i18n="common.brandSub">Inter-Institutional Agreements</span>
     </div>
   </div>
   <div class="topbar-nav">
-    <a href="index.html" class="nav-link">Statistics</a>
-    <a href="map.html" class="nav-link">Partner Map</a>
-    <a href="communication.html" class="nav-link active">Communication</a>
+    <a href="index.html" class="nav-link" data-i18n="common.nav.statistics">Statistics</a>
+    <a href="map.html" class="nav-link" data-i18n="common.nav.map">Partner Map</a>
+    <a href="communication.html" class="nav-link active" data-i18n="common.nav.communication">Communication</a>
   </div>
   <div class="topbar-right">
     <div id="authArea" class="auth-area">
-      <button type="button" class="admin-link" id="adminSignInBtn">Admin sign in</button>
+      <button type="button" class="admin-link" id="adminSignInBtn" data-i18n="common.adminSignIn">Admin sign in</button>
     </div>
     <div id="gsiHiddenBtn" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-9999px;left:-9999px;"></div>
-    <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
+    <div id="langSwitch"></div>
+    <button id="themeToggle" class="icon-btn" data-i18n-aria-label="common.themeToggleAria" aria-label="Toggle color theme"></button>
   </div>
 </nav>
 
@@ -605,31 +622,31 @@ input,textarea{font-family:inherit;}
 <main class="page">
   <header class="page-header">
     <div>
-      <h1>Communication Center</h1>
-      <p class="page-sub">Review applications and send faculty or partner university emails in one place.</p>
+      <h1 data-i18n="communication.title">Communication Center</h1>
+      <p class="page-sub" data-i18n="communication.subtitle">Review applications and send faculty or partner university emails in one place.</p>
     </div>
     <div class="page-actions">
       <span id="lastUpdated" class="muted"></span>
       <button id="refreshBtn" class="btn">
         <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
-        Refresh
+        <span data-i18n="common.refresh">Refresh</span>
       </button>
     </div>
   </header>
 
-  <section id="cardsSection" class="cards-grid" aria-label="Communication summary"></section>
+  <section id="cardsSection" class="cards-grid" data-i18n-aria-label="communication.aria.summary" aria-label="Communication summary"></section>
 
-  <section id="mainSection" class="comm-layout" aria-label="Applications and email workspace">
+  <section id="mainSection" class="comm-layout" data-i18n-aria-label="communication.aria.workspace" aria-label="Applications and email workspace">
     <div class="list-col">
       <div class="filter-card">
-        <div class="filter-card-head"><h3>Search</h3></div>
+        <div class="filter-card-head"><h3 data-i18n="communication.search.title">Search</h3></div>
         <div class="search-wrap" style="margin-top:10px;">
           <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" id="searchInput" class="search-input" placeholder="University, applicant or email…" autocomplete="off">
+          <input type="text" id="searchInput" class="search-input" data-i18n-placeholder="communication.search.placeholder" placeholder="University, applicant or email…" autocomplete="off">
         </div>
         <div class="segmented" id="filterSegmented">
-          <button class="segmented-btn active" data-filter="new">New Applications <span class="segmented-count" id="countNew">0</span></button>
-          <button class="segmented-btn" data-filter="signed">Signed Agreements <span class="segmented-count" id="countSigned">0</span></button>
+          <button class="segmented-btn active" data-filter="new"><span data-i18n="communication.filters.newApplications">New Applications</span> <span class="segmented-count" id="countNew">0</span></button>
+          <button class="segmented-btn" data-filter="signed"><span data-i18n="communication.filters.signedAgreements">Signed Agreements</span> <span class="segmented-count" id="countSigned">0</span></button>
         </div>
         <div class="date-filter">
           <button type="button" class="date-filter-btn" id="dateFilterBtn">
@@ -637,13 +654,13 @@ input,textarea{font-family:inherit;}
             <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
           </button>
           <div class="date-filter-panel hidden" id="dateFilterPanel">
-            <button type="button" class="date-filter-option active" data-range="all">All dates</button>
-            <button type="button" class="date-filter-option" data-range="today">Today</button>
-            <button type="button" class="date-filter-option" data-range="7">Last 7 days</button>
-            <button type="button" class="date-filter-option" data-range="30">Last 30 days</button>
+            <button type="button" class="date-filter-option active" data-range="all" data-i18n="communication.dateFilter.all">All dates</button>
+            <button type="button" class="date-filter-option" data-range="today" data-i18n="communication.dateFilter.today">Today</button>
+            <button type="button" class="date-filter-option" data-range="7" data-i18n="communication.dateFilter.last7">Last 7 days</button>
+            <button type="button" class="date-filter-option" data-range="30" data-i18n="communication.dateFilter.last30">Last 30 days</button>
             <div class="date-filter-custom">
-              <input type="date" id="dateFilterFrom" aria-label="From date">
-              <input type="date" id="dateFilterTo" aria-label="To date">
+              <input type="date" id="dateFilterFrom" data-i18n-aria-label="communication.dateFilter.fromLabel" aria-label="From date">
+              <input type="date" id="dateFilterTo" data-i18n-aria-label="communication.dateFilter.toLabel" aria-label="To date">
             </div>
           </div>
         </div>
@@ -657,14 +674,14 @@ input,textarea{font-family:inherit;}
     <div class="workspace-col">
       <div id="workspaceEmpty" class="empty-state">
         <svg viewBox="0 0 24 24"><path d="M3 12l3-8h12l3 8"/><path d="M3 12v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6"/><path d="M3 12h5l1.5 3h5L16 12h5"/></svg>
-        <h3>Select an application</h3>
-        <p>Choose an application from the list on the left to see its details and prepare an email.</p>
+        <h3 data-i18n="communication.workspace.selectTitle">Select an application</h3>
+        <p data-i18n="communication.workspace.selectDesc">Choose an application from the list on the left to see its details and prepare an email.</p>
       </div>
 
       <div id="workspaceContent" class="hidden">
         <div id="detailCard" class="detail-card"></div>
         <div class="email-card">
-          <div class="section-title">Email</div>
+          <div class="section-title" data-i18n="communication.email.sectionTitle">Email</div>
           <div class="sender-row" id="senderRow">
             <div class="sender-avatar" id="senderAvatar">MD</div>
             <div class="sender-text">
@@ -674,59 +691,59 @@ input,textarea{font-family:inherit;}
           </div>
           <div id="templateChoice" class="template-choice"></div>
           <div id="sourceRow" class="source-row hidden">
-            <span class="source-row-label">Recipients generated from:</span>
+            <span class="source-row-label" data-i18n="communication.email.recipientsGeneratedFrom">Recipients generated from:</span>
             <span id="sourceChips"></span>
           </div>
           <div id="recipientsHint" class="field-hint" style="margin-bottom:10px;"></div>
 
           <div class="editor-card">
             <div class="editor-row align-top">
-              <label for="recipientsInput">To</label>
+              <label for="recipientsInput" data-i18n="communication.email.to">To</label>
               <div class="recipients-editor" id="recipientsEditor">
                 <span id="recipientsChips"></span>
-                <input type="text" id="recipientsInput" placeholder="Add recipient and press Enter">
+                <input type="text" id="recipientsInput" data-i18n-placeholder="communication.email.addRecipientPlaceholder" placeholder="Add recipient and press Enter">
               </div>
             </div>
             <div class="editor-row" style="border-bottom:none;">
-              <label for="fieldSubject">Subject</label>
-              <input type="text" id="fieldSubject" placeholder="Subject line">
+              <label for="fieldSubject" data-i18n="communication.email.subject">Subject</label>
+              <input type="text" id="fieldSubject" data-i18n-placeholder="communication.email.subjectPlaceholder" placeholder="Subject line">
             </div>
             <div class="editor-body-wrap" style="border-top:1px solid var(--border);">
-              <textarea id="fieldBody" class="editor-body" placeholder="Email body…"></textarea>
+              <textarea id="fieldBody" class="editor-body" data-i18n-placeholder="communication.email.bodyPlaceholder" placeholder="Email body…"></textarea>
             </div>
           </div>
 
           <div class="ai-actions" id="aiActionsRow">
-            <button id="btnCreateDescription" class="ai-btn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
+            <button id="btnCreateDescription" class="ai-btn" data-admin-only disabled data-i18n-title="common.adminOnlyTooltip" title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
-              ✨ Create Description
+              <span data-i18n="communication.buttons.createDescription">✨ Create Description</span>
             </button>
-            <button id="btnGenerateFacultyEmail" class="ai-btn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
+            <button id="btnGenerateFacultyEmail" class="ai-btn" data-admin-only disabled data-i18n-title="common.adminOnlyTooltip" title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>
-              ✨ Generate Faculty Email
+              <span data-i18n="communication.buttons.generateFacultyEmail">✨ Generate Faculty Email</span>
             </button>
           </div>
 
           <div class="editor-actions">
-            <button id="btnRestoreGenerated" class="btn" disabled title="Restore the last automatically generated email">
+            <button id="btnRestoreGenerated" class="btn" disabled data-i18n-title="communication.buttons.restoreGeneratedTooltip" title="Restore the last automatically generated email">
               <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
-              Restore Generated Email
+              <span data-i18n="communication.buttons.restoreGenerated">Restore Generated Email</span>
             </button>
-            <button id="btnSaveDraft" class="btn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
+            <button id="btnSaveDraft" class="btn" data-admin-only disabled data-i18n-title="common.adminOnlyTooltip" title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
-              Save Draft
+              <span data-i18n="communication.buttons.saveDraft">Save Draft</span>
             </button>
             <button id="btnCopy" class="btn">
               <svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
+              <span data-i18n="communication.buttons.copy">Copy</span>
             </button>
             <button id="btnPreview" class="btn">
               <svg viewBox="0 0 24 24"><path d="M1.5 12S5 5 12 5s10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3.2"/></svg>
-              Preview
+              <span data-i18n="communication.buttons.preview">Preview</span>
             </button>
-            <button id="btnSendEmail" class="btn btn-primary" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
+            <button id="btnSendEmail" class="btn btn-primary" data-admin-only disabled data-i18n-title="common.adminOnlyTooltip" title="Sign in as an authorized admin to use this feature.">
               <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
-              Send Email
+              <span data-i18n="communication.buttons.sendEmail">Send Email</span>
             </button>
           </div>
         </div>
@@ -741,22 +758,22 @@ input,textarea{font-family:inherit;}
 <div id="previewModalOverlay" class="modal-overlay hidden">
   <div class="modal" style="max-width:680px;">
     <div class="modal-header">
-      <h3>Email preview</h3>
-      <button class="modal-close" id="previewModalClose"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 data-i18n="communication.modal.previewTitle">Email preview</h3>
+      <button class="modal-close" id="previewModalClose" data-i18n-aria-label="communication.buttons.close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
-      <div class="preview-row"><div class="preview-label">To</div><div class="preview-value" id="previewRecipients"></div></div>
-      <div class="preview-row"><div class="preview-label">Subject</div><div class="preview-value" id="previewSubject"></div></div>
+      <div class="preview-row"><div class="preview-label" data-i18n="communication.email.to">To</div><div class="preview-value" id="previewRecipients"></div></div>
+      <div class="preview-row"><div class="preview-label" data-i18n="communication.email.subject">Subject</div><div class="preview-value" id="previewSubject"></div></div>
       <div class="preview-row">
-        <div class="preview-label">Body</div>
+        <div class="preview-label" data-i18n="communication.modal.bodyLabel">Body</div>
         <iframe id="previewFrame" title="Email preview" style="width:100%;min-height:360px;border:1px solid var(--border);border-radius:var(--radius-sm);background:#fff;"></iframe>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" id="previewCloseBtn">Close</button>
-      <button class="btn btn-primary" id="previewSendBtn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
+      <button class="btn" id="previewCloseBtn" data-i18n="communication.buttons.close">Close</button>
+      <button class="btn btn-primary" id="previewSendBtn" data-admin-only disabled data-i18n-title="common.adminOnlyTooltip" title="Sign in as an authorized admin to use this feature.">
         <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
-        Send Email
+        <span data-i18n="communication.buttons.sendEmail">Send Email</span>
       </button>
     </div>
   </div>
@@ -766,22 +783,22 @@ input,textarea{font-family:inherit;}
 <div id="sendModalOverlay" class="modal-overlay hidden">
   <div class="modal" style="max-width:480px;">
     <div class="modal-header">
-      <h3>Send email</h3>
-      <button class="modal-close" id="sendModalClose"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 data-i18n="communication.modal.sendTitle">Send email</h3>
+      <button class="modal-close" id="sendModalClose" data-i18n-aria-label="communication.buttons.close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
     <div class="modal-body">
-      <div class="preview-row"><div class="preview-label">Recipients</div><div class="preview-value" id="sendRecipients"></div></div>
-      <div class="preview-row"><div class="preview-label">Subject</div><div class="preview-value" id="sendSubject"></div></div>
+      <div class="preview-row"><div class="preview-label" data-i18n="communication.modal.recipientsLabel">Recipients</div><div class="preview-value" id="sendRecipients"></div></div>
+      <div class="preview-row"><div class="preview-label" data-i18n="communication.email.subject">Subject</div><div class="preview-value" id="sendSubject"></div></div>
       <div class="preview-row">
-        <div class="preview-label">Attachments</div>
-        <div class="attachment-row"><span>No attachments</span></div>
+        <div class="preview-label" data-i18n="communication.modal.attachmentsLabel">Attachments</div>
+        <div class="attachment-row"><span data-i18n="communication.modal.noAttachments">No attachments</span></div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn" id="sendCancelBtn">Cancel</button>
-      <button class="btn btn-primary" id="sendConfirmBtn" data-admin-only disabled title="Sign in as an authorized admin to use this feature.">
+      <button class="btn" id="sendCancelBtn" data-i18n="communication.buttons.cancel">Cancel</button>
+      <button class="btn btn-primary" id="sendConfirmBtn" data-admin-only disabled data-i18n-title="common.adminOnlyTooltip" title="Sign in as an authorized admin to use this feature.">
         <svg viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
-        Send
+        <span data-i18n="communication.buttons.send">Send</span>
       </button>
     </div>
   </div>
@@ -813,6 +830,19 @@ input,textarea{font-family:inherit;}
    Google account. See buildMimeMessage() / sendGmailMessage() below.
 */
 var API_BASE = "https://script.google.com/macros/s/AKfycby0Gcw_lb4r4cY1Pa4xhdclmt-tOfiAXNXQhmxgJB_YsR1DIMoV4nVD7OHIDiQftTnFig/exec";
+
+/* ============================================================
+   I18N — static markup is translated via data-i18n attributes;
+   dynamically generated content (KPI cards, app list, detail
+   card, template chooser, hints, toasts, modals, empty/error
+   states) is rebuilt on language change, further down. Content
+   coming from Google Sheets (names, emails, countries, etc.) and
+   the auto-composed outgoing email text are never translated —
+   only this page's own chrome is.
+   ============================================================ */
+I18n.initLangSwitch('langSwitch');
+I18n.apply(document);
+document.title = I18n.t('communication.docTitle');
 
 /* ============================================================
    ICONS (inline, no external icon library)
@@ -854,7 +884,7 @@ function applyRolePermissions(){
 }
 function isAdminOrWarn(){
   if (window.STUAuth && window.STUAuth.isAdmin()) return true;
-  showToast('error', 'Sign in as an authorized admin to use this feature.');
+  showToast('error', I18n.t('common.adminOnlyTooltip'));
   return false;
 }
 document.addEventListener('stuauth:change', applyRolePermissions);
@@ -873,7 +903,12 @@ function apiGet(action, params){
     if (params[k] !== undefined && params[k] !== null && params[k] !== '') url.searchParams.set(k, params[k]);
   });
   return fetch(url.toString(), { method:'GET' }).then(function(res){
-    if (!res.ok) throw new Error('The server responded with status ' + res.status + '.');
+    if (!res.ok){
+      var e = new Error(I18n.t('common.serverStatusError', { status: res.status }));
+      e.i18nKey = 'common.serverStatusError';
+      e.i18nParams = { status: res.status };
+      throw e;
+    }
     return res.json();
   }).then(function(json){
     if (json && json.error) throw new Error(json.error);
@@ -1451,7 +1486,6 @@ function buildFacultyBody(app, descriptionText){
   lines.push('Michal Ďuďák');
 
   return lines.join('\n');
-
 }
 function buildPartnerBody(app){
   var greetingName =
@@ -1514,7 +1548,7 @@ function showToast(type, message){
   el.id = id;
   el.innerHTML = icon +
     '<div class="toast-text">' + escapeHtml(message) + '</div>' +
-    '<button class="toast-close" aria-label="Dismiss">' + '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>' + '</button>';
+    '<button class="toast-close" aria-label="' + escapeHtml(I18n.t('communication.toast.dismissAria')) + '">' + '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>' + '</button>';
   toastStack.appendChild(el);
   el.querySelector('.toast-close').addEventListener('click', function(){ removeToast(id); });
   setTimeout(function(){ removeToast(id); }, 5200);
@@ -1544,10 +1578,10 @@ document.getElementById('sendCancelBtn').addEventListener('click', function(){ c
    ============================================================ */
 var cardsSection = document.getElementById('cardsSection');
 var KPI_DEFS = [
-  { key:'newCount',    label:'New Applications',                icon:'newApp',   varc:'--status-new' },
-  { key:'readyNotify',  label:'Ready to Notify Faculties',       icon:'bell',     varc:'--amber' },
-  { key:'signedReady', label:'Signed Agreements Ready to Send', icon:'send',     varc:'--status-signed' },
-  { key:'draftCount',  label:'Draft Emails',                    icon:'draft',    varc:'--text-tertiary' }
+  { key:'newCount',    i18nKey:'communication.cards.newApplications', icon:'newApp',   varc:'--status-new' },
+  { key:'readyNotify',  i18nKey:'communication.cards.readyNotify',    icon:'bell',     varc:'--amber' },
+  { key:'signedReady', i18nKey:'communication.cards.signedReady',    icon:'send',     varc:'--status-signed' },
+  { key:'draftCount',  i18nKey:'communication.cards.draftCount',     icon:'draft',    varc:'--text-tertiary' }
 ];
 function animateValue(el, to){
   var startTime = null; var duration = 750;
@@ -1575,7 +1609,7 @@ function renderCards(){
   cardsSection.innerHTML = KPI_DEFS.map(function(d){
     return '<div class="stat-card">' +
       '<div class="stat-icon" style="color:var(' + d.varc + ');background:color-mix(in srgb, var(' + d.varc + ') 14%, transparent)">' + ICONS[d.icon] + '</div>' +
-      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + d.label + '</span></div>' +
+      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + escapeHtml(I18n.t(d.i18nKey)) + '</span></div>' +
     '</div>';
   }).join('');
   KPI_DEFS.forEach(function(d){ animateValue(document.getElementById('val-'+d.key), kpis[d.key]); });
@@ -1594,16 +1628,16 @@ var filterSegmented = document.getElementById('filterSegmented');
 var countNewEl = document.getElementById('countNew');
 var countSignedEl = document.getElementById('countSigned');
 
-var STAGE_LABELS = {
-  new: 'New — awaiting faculty routing',
-  in_progress: 'In progress',
-  signed: 'Signed — ready to notify partner',
-  rejected: 'Rejected',
-  unknown: 'Other'
+var STAGE_LABEL_KEYS = {
+  new: 'communication.stage.new',
+  in_progress: 'communication.stage.inProgress',
+  signed: 'communication.stage.signed',
+  rejected: 'communication.stage.rejected',
+  unknown: 'communication.stage.other'
 };
 var STATUS_BADGE_CLASS = { new:'badge-new', in_progress:'badge-progress', signed:'badge-signed', rejected:'badge-rejected', unknown:'badge-progress' };
 
-function stageLabel(app){ return app.status || STAGE_LABELS[app.statusKey] || 'Unknown'; }
+function stageLabel(app){ return app.status || I18n.t(STAGE_LABEL_KEYS[app.statusKey] || STAGE_LABEL_KEYS.unknown) || I18n.t('common.unknown'); }
 
 function renderCounts(){
   countNewEl.textContent = String(state.apps.filter(function(a){ return a.statusKey === 'new'; }).length);
@@ -1647,16 +1681,16 @@ function onFilterChange(){
 
 function renderList(){
   if (!state.visibleApps.length){
-    appList.innerHTML = '<div class="app-list-empty">No applications match your search.</div>';
+    appList.innerHTML = '<div class="app-list-empty">' + escapeHtml(I18n.t('communication.list.empty')) + '</div>';
     return;
   }
   appList.innerHTML = state.visibleApps.map(function(a){
     var badgeClass = STATUS_BADGE_CLASS[a.statusKey] || 'badge-progress';
     return '<div class="app-item' + (a.id === state.selectedId ? ' active' : '') + '" data-id="' + escapeHtml(a.id) + '">' +
       '<div class="app-item-top">' +
-        '<div><div class="app-item-uni">' + escapeHtml(a.university || 'Unknown university') + '</div>' +
-        '<div class="app-item-country">' + ICONS.pin + '<span>' + escapeHtml(a.country || 'Unknown') + '</span></div></div>' +
-        '<span class="badge ' + badgeClass + '">' + escapeHtml(a.status || STAGE_LABELS[a.statusKey] || 'Other') + '</span>' +
+        '<div><div class="app-item-uni">' + escapeHtml(a.university || I18n.t('communication.list.unknownUniversity')) + '</div>' +
+        '<div class="app-item-country">' + ICONS.pin + '<span>' + escapeHtml(a.country || I18n.t('communication.list.unknownCountry')) + '</span></div></div>' +
+        '<span class="badge ' + badgeClass + '">' + escapeHtml(a.status || I18n.t(STAGE_LABEL_KEYS[a.statusKey] || STAGE_LABEL_KEYS.unknown)) + '</span>' +
       '</div>' +
       '<div class="app-item-applicant">' + ICONS.mail + '<span>' + escapeHtml(a.applicant) + (a.email ? ' · ' + escapeHtml(a.email) : '') + '</span></div>' +
       '<div class="app-item-stage">' + escapeHtml(stageLabel(a)) + '</div>' +
@@ -1694,7 +1728,10 @@ var dateFilterPanel = document.getElementById('dateFilterPanel');
 var dateFilterLabel = document.getElementById('dateFilterLabel');
 var dateFilterFrom = document.getElementById('dateFilterFrom');
 var dateFilterTo = document.getElementById('dateFilterTo');
-var DATE_RANGE_LABELS = { all:'All dates', today:'Today', '7':'Last 7 days', '30':'Last 30 days', custom:'Custom range' };
+var DATE_RANGE_LABEL_KEYS = { all:'communication.dateFilter.all', today:'communication.dateFilter.today', '7':'communication.dateFilter.last7', '30':'communication.dateFilter.last30', custom:'communication.dateFilter.custom' };
+function renderDateFilterLabel(){
+  dateFilterLabel.textContent = I18n.t(DATE_RANGE_LABEL_KEYS[state.dateRange.key] || DATE_RANGE_LABEL_KEYS.all);
+}
 
 dateFilterBtn.addEventListener('click', function(e){
   e.stopPropagation();
@@ -1711,7 +1748,7 @@ Array.prototype.forEach.call(dateFilterPanel.querySelectorAll('.date-filter-opti
     Array.prototype.forEach.call(dateFilterPanel.querySelectorAll('.date-filter-option'), function(b){ b.classList.remove('active'); });
     btn.classList.add('active');
     state.dateRange = { key: range, from:null, to:null };
-    dateFilterLabel.textContent = DATE_RANGE_LABELS[range] || 'All dates';
+    renderDateFilterLabel();
     if (range !== 'custom'){ dateFilterFrom.value = ''; dateFilterTo.value = ''; }
     onFilterChange();
   });
@@ -1722,7 +1759,7 @@ function applyCustomDateRange(){
   if (!fromVal && !toVal) return;
   Array.prototype.forEach.call(dateFilterPanel.querySelectorAll('.date-filter-option'), function(b){ b.classList.remove('active'); });
   state.dateRange = { key:'custom', from: fromVal, to: toVal };
-  dateFilterLabel.textContent = DATE_RANGE_LABELS.custom;
+  renderDateFilterLabel();
   onFilterChange();
 }
 dateFilterFrom.addEventListener('change', applyCustomDateRange);
@@ -1749,40 +1786,41 @@ function detailRow(label, valueHtml, full){
     '<div class="detail-value">' + valueHtml + '</div></div>';
 }
 function chipRow(items, muted){
-  if (!items.length) return '<span class="detail-value empty">None specified</span>';
+  if (!items.length) return '<span class="detail-value empty">' + escapeHtml(I18n.t('communication.detail.noneSpecified')) + '</span>';
   return '<div class="chip-row">' + items.map(function(i){ return '<span class="chip' + (muted?' chip-muted':'') + '">' + escapeHtml(i) + '</span>'; }).join('') + '</div>';
 }
 function renderDetailCard(app){
   var badgeClass = STATUS_BADGE_CLASS[app.statusKey] || 'badge-progress';
   var facultyLabels = app.facultyCodes.map(function(c){ return facultyLabel(c); });
   var mobilityLabels = app.mobilityCodes.map(function(c){ return MOBILITY_LABEL_BY_CODE[c] || c; });
+  var statusText = app.status || I18n.t(STAGE_LABEL_KEYS[app.statusKey] || STAGE_LABEL_KEYS.unknown);
 
   var englishHtml =
-    '<div class="detail-subrow"><span class="muted">Students:</span> ' +
-      (meaningful(app.languageStudents) ? escapeHtml(app.languageStudents) : '<span class="empty">Not specified</span>') +
+    '<div class="detail-subrow"><span class="muted">' + escapeHtml(I18n.t('communication.detail.students')) + '</span> ' +
+      (meaningful(app.languageStudents) ? escapeHtml(app.languageStudents) : '<span class="empty">' + escapeHtml(I18n.t('communication.detail.notSpecified')) + '</span>') +
     '</div>' +
-    '<div class="detail-subrow"><span class="muted">Staff:</span> ' +
-      (meaningful(app.languageStaff) ? escapeHtml(app.languageStaff) : '<span class="empty">Not specified</span>') +
+    '<div class="detail-subrow"><span class="muted">' + escapeHtml(I18n.t('communication.detail.staff')) + '</span> ' +
+      (meaningful(app.languageStaff) ? escapeHtml(app.languageStaff) : '<span class="empty">' + escapeHtml(I18n.t('communication.detail.notSpecified')) + '</span>') +
     '</div>';
 
   detailCard.innerHTML =
     '<div class="detail-head">' +
-      '<div><div class="detail-title">' + escapeHtml(app.university || 'Unknown university') + '</div>' +
-      '<div class="detail-sub">' + ICONS.pin + '<span>' + escapeHtml(app.country || 'Unknown country') + '</span></div></div>' +
-      '<span class="badge ' + badgeClass + '">' + escapeHtml(app.status || STAGE_LABELS[app.statusKey] || 'Other') + '</span>' +
+      '<div><div class="detail-title">' + escapeHtml(app.university || I18n.t('communication.detail.unknownUniversity')) + '</div>' +
+      '<div class="detail-sub">' + ICONS.pin + '<span>' + escapeHtml(app.country || I18n.t('communication.detail.unknownCountry')) + '</span></div></div>' +
+      '<span class="badge ' + badgeClass + '">' + escapeHtml(statusText) + '</span>' +
     '</div>' +
     '<div class="detail-grid">' +
-      detailRow('Applicant', escapeHtml(app.applicant) + (app.position ? ' <span class="muted">(' + escapeHtml(app.position) + ')</span>' : '')) +
-      detailRow('Email', app.email ? '<a href="mailto:' + escapeHtml(app.email) + '">' + escapeHtml(app.email) + '</a>' : '<span class="detail-value empty">Not provided</span>') +
-      detailRow('Requested faculties', chipRow(facultyLabels), true) +
-      detailRow('Mobility', chipRow(mobilityLabels)) +
-      detailRow('Study levels', chipRow(app.levels)) +
-      detailRow('English requirements', englishHtml, true) +
-      (meaningful(app.languageOther) ? detailRow('Other language requirements', escapeHtml(app.languageOther)) : '') +
-      detailRow('Foreign Erasmus code', meaningful(app.erasmusCode) ? '<span class="mono">' + escapeHtml(app.erasmusCode) + '</span>' : '<span class="empty">Not provided</span>') +
-      ((app.overlaps && app.overlaps.length) ? detailRow('Overlaps', chipRow(app.overlaps), true) : '') +
-      detailRow('Reason for cooperation', app.reason ? escapeHtml(app.reason) : '<span class="empty">Not provided</span>', true) +
-      detailRow('Status', '<span class="badge ' + badgeClass + '">' + escapeHtml(app.status || STAGE_LABELS[app.statusKey] || 'Other') + '</span>') +
+      detailRow(I18n.t('communication.detail.applicant'), escapeHtml(app.applicant) + (app.position ? ' <span class="muted">(' + escapeHtml(app.position) + ')</span>' : '')) +
+      detailRow(I18n.t('communication.detail.email'), app.email ? '<a href="mailto:' + escapeHtml(app.email) + '">' + escapeHtml(app.email) + '</a>' : '<span class="detail-value empty">' + escapeHtml(I18n.t('communication.detail.notProvided')) + '</span>') +
+      detailRow(I18n.t('communication.detail.requestedFaculties'), chipRow(facultyLabels), true) +
+      detailRow(I18n.t('communication.detail.mobility'), chipRow(mobilityLabels)) +
+      detailRow(I18n.t('communication.detail.studyLevels'), chipRow(app.levels)) +
+      detailRow(I18n.t('communication.detail.englishRequirements'), englishHtml, true) +
+      (meaningful(app.languageOther) ? detailRow(I18n.t('communication.detail.otherLanguageRequirements'), escapeHtml(app.languageOther)) : '') +
+      detailRow(I18n.t('communication.detail.foreignErasmusCode'), meaningful(app.erasmusCode) ? '<span class="mono">' + escapeHtml(app.erasmusCode) + '</span>' : '<span class="empty">' + escapeHtml(I18n.t('communication.detail.notProvided')) + '</span>') +
+      ((app.overlaps && app.overlaps.length) ? detailRow(I18n.t('communication.detail.overlaps'), chipRow(app.overlaps), true) : '') +
+      detailRow(I18n.t('communication.detail.reasonForCooperation'), app.reason ? escapeHtml(app.reason) : '<span class="empty">' + escapeHtml(I18n.t('communication.detail.notProvided')) + '</span>', true) +
+      detailRow(I18n.t('communication.detail.status'), '<span class="badge ' + badgeClass + '">' + escapeHtml(statusText) + '</span>') +
     '</div>';
 }
 
@@ -1799,15 +1837,15 @@ var recipientsChipsEl = document.getElementById('recipientsChips');
 var recipientsInputEl = document.getElementById('recipientsInput');
 
 var TEMPLATE_DEFS = [
-  { key:'faculty', title:'Faculty Coordinators', sub:'Notify STU faculties for review' },
-  { key:'partner', title:'Partner University', sub:'Confirm the signed agreement' }
+  { key:'faculty', titleKey:'communication.templates.faculty.title', subKey:'communication.templates.faculty.sub' },
+  { key:'partner', titleKey:'communication.templates.partner.title', subKey:'communication.templates.partner.sub' }
 ];
 
 function renderTemplateChoice(){
   templateChoiceEl.innerHTML = TEMPLATE_DEFS.map(function(t){
     return '<label class="template-option' + (state.activeTemplate === t.key ? ' active' : '') + '" data-template="' + t.key + '">' +
       '<input type="radio" name="emailTemplate" value="' + t.key + '" ' + (state.activeTemplate === t.key ? 'checked' : '') + '>' +
-      '<span class="template-option-text"><strong>' + escapeHtml(t.title) + '</strong><span>' + escapeHtml(t.sub) + '</span></span>' +
+      '<span class="template-option-text"><strong>' + escapeHtml(I18n.t(t.titleKey)) + '</strong><span>' + escapeHtml(I18n.t(t.subKey)) + '</span></span>' +
     '</label>';
   }).join('');
   Array.prototype.forEach.call(templateChoiceEl.querySelectorAll('.template-option'), function(el){
@@ -1826,7 +1864,7 @@ function renderRecipientChips(){
     var invalid = !isLikelyEmail(email);
     return '<span class="recipient-chip' + (invalid ? ' invalid' : '') + '" data-idx="' + i + '">' +
       escapeHtml(email) +
-      '<button type="button" class="recipient-chip-remove" data-idx="' + i + '" aria-label="Remove ' + escapeHtml(email) + '">' +
+      '<button type="button" class="recipient-chip-remove" data-idx="' + i + '" aria-label="' + escapeHtml(I18n.t('communication.email.removeRecipientAria', { email: email })) + '">' +
         '<svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>' +
       '</button></span>';
   }).join('');
@@ -1893,14 +1931,29 @@ function updateAiActionsVisibility(){
   if (state.activeTemplate === 'faculty') row.classList.remove('hidden');
   else row.classList.add('hidden');
 }
-function paintRecipientsHint(composed){
-  if (composed.missing && composed.missing.length){
-    recipientsHintEl.textContent = 'No coordinator e-mail on file for: ' + composed.missing.join(', ') + '. Add recipients manually.';
+function renderRecipientsHintText(){
+  var kind = state.recipientsHintKind;
+  if (!kind) { recipientsHintEl.textContent = ''; recipientsHintEl.classList.remove('warn'); return; }
+  if (kind === 'missing'){
+    recipientsHintEl.textContent = I18n.t('communication.recipientsHint.missing', { codes: state.recipientsHintCodes.join(', ') });
     recipientsHintEl.classList.add('warn');
+  } else if (kind === 'restoredDraft'){
+    recipientsHintEl.textContent = I18n.t('communication.recipientsHint.restoredDraft');
+    recipientsHintEl.classList.remove('warn');
   } else {
-    recipientsHintEl.textContent = 'Recipients were auto-filled from the requested faculties. Everything below is editable.';
+    recipientsHintEl.textContent = I18n.t('communication.recipientsHint.autoFilled');
     recipientsHintEl.classList.remove('warn');
   }
+}
+function paintRecipientsHint(composed){
+  if (composed.missing && composed.missing.length){
+    state.recipientsHintKind = 'missing';
+    state.recipientsHintCodes = composed.missing;
+  } else {
+    state.recipientsHintKind = 'autoFilled';
+    state.recipientsHintCodes = [];
+  }
+  renderRecipientsHintText();
 }
 function paintSourceRow(composed){
   if (composed.sourceFaculties && composed.sourceFaculties.length){
@@ -1932,8 +1985,9 @@ function selectApp(id){
     fieldSubject.value = draft.subject;
     fieldBody.value = draft.body;
     state.currentDescriptionText = app.aiDescription || app.reason || '';
-    recipientsHintEl.textContent = 'Restored from your saved draft.';
-    recipientsHintEl.classList.remove('warn');
+    state.recipientsHintKind = 'restoredDraft';
+    state.recipientsHintCodes = [];
+    renderRecipientsHintText();
     paintSourceRow({ sourceFaculties: draft.template === 'faculty' ? app.facultyCodes : [] });
   } else {
     state.activeTemplate = defaultTemplateFor(app);
@@ -1988,7 +2042,7 @@ function requestAiPolish(bodyText){
   return apiPost('ai', { mode:'polish', text: bodyText })
     .then(function(res){
       var polished = pick(res, ['data','result','polished','text','output','content']);
-      if (!polished){ throw new Error('The AI endpoint did not return any text.'); }
+      if (!polished){ throw new Error(I18n.t('communication.toast.aiNoText')); }
       return String(polished).trim();
     });
 }
@@ -1998,7 +2052,7 @@ btnCreateDescription.addEventListener('click', function(){
   var app = currentApp();
   if (!app) return;
   if (!app.reason){
-    showToast('info', 'This application has no stated reason for cooperation to rewrite.');
+    showToast('info', I18n.t('communication.toast.noReason'));
     return;
   }
   btnCreateDescription.classList.add('spinning');
@@ -2017,11 +2071,11 @@ btnCreateDescription.addEventListener('click', function(){
       fieldBody.value = body;
       app.aiDescription = description;
       state.currentDescriptionText = description;
-      showToast('success', 'Description generated and inserted into the email.');
+      showToast('success', I18n.t('communication.toast.descriptionGenerated'));
     })
     .catch(function(err){
       console.error(err);
-      showToast('error', err.message || 'Could not generate a description right now.');
+      showToast('error', err.message || I18n.t('communication.toast.descriptionError'));
     })
     .finally(function(){
       btnCreateDescription.classList.remove('spinning');
@@ -2034,7 +2088,7 @@ btnGenerateFacultyEmail.addEventListener('click', function(){
   var app = currentApp();
   if (!app) return;
   if (state.activeTemplate !== 'faculty'){
-    showToast('info', 'Switch to the Faculty Coordinators template first.');
+    showToast('info', I18n.t('communication.toast.switchToFaculty'));
     return;
   }
   btnGenerateFacultyEmail.classList.add('spinning');
@@ -2057,7 +2111,7 @@ btnGenerateFacultyEmail.addEventListener('click', function(){
         .catch(function(err){
           // Polishing is a nice-to-have — if it fails, keep the code-assembled draft.
           console.error(err);
-          showToast('info', 'Assembled the email, but the AI polishing pass failed — showing the unpolished draft.');
+          showToast('info', I18n.t('communication.toast.polishFailed'));
           return composed;
         });
     })
@@ -2068,11 +2122,11 @@ btnGenerateFacultyEmail.addEventListener('click', function(){
       paintRecipientsHint(composed);
       paintSourceRow(composed);
       storeGeneratedEmail(composed.subject, composed.body);
-      showToast('success', 'Faculty email generated from the application data.');
+      showToast('success', I18n.t('communication.toast.facultyEmailGenerated'));
     })
     .catch(function(err){
       console.error(err);
-      showToast('error', err.message || 'Could not generate the faculty email right now.');
+      showToast('error', err.message || I18n.t('communication.toast.facultyEmailError'));
     })
     .finally(function(){
       btnGenerateFacultyEmail.classList.remove('spinning');
@@ -2106,7 +2160,7 @@ btnRestoreGenerated.addEventListener('click', function(){
   if (!hasGeneratedEmail) return;
   fieldSubject.value = generatedEmail.subject;
   fieldBody.value = generatedEmail.body;
-  showToast('success', 'Generated email restored.');
+  showToast('success', I18n.t('communication.toast.generatedRestored'));
 });
 
 /* ============================================================
@@ -2130,20 +2184,20 @@ document.getElementById('btnSaveDraft').addEventListener('click', function(){
   var draft = collectEmailState();
   state.drafts[app.id] = draft;
   renderCards();
-  showToast('success', 'Draft saved.');
+  showToast('success', I18n.t('communication.toast.draftSaved'));
   apiPost('saveDraft', {
     applicationId: app.id, template: draft.template, recipients: draft.recipientsText,
     subject: draft.subject, body: draft.body
   }).catch(function(err){
     console.error(err);
-    showToast('info', 'Draft saved locally, but syncing to the server failed.');
+    showToast('info', I18n.t('communication.toast.draftSyncFailed'));
   });
 });
 
 document.getElementById('btnCopy').addEventListener('click', function(){
   var draft = collectEmailState();
-  var text = 'To: ' + draft.recipientsText + '\nSubject: ' + draft.subject + '\n\n' + draft.body;
-  var done = function(){ showToast('success', 'Email copied to clipboard.'); };
+  var text = I18n.t('communication.email.to') + ': ' + draft.recipientsText + '\n' + I18n.t('communication.email.subject') + ': ' + draft.subject + '\n\n' + draft.body;
+  var done = function(){ showToast('success', I18n.t('communication.toast.copied')); };
   var fail = function(){
     try {
       var ta = document.createElement('textarea');
@@ -2151,7 +2205,7 @@ document.getElementById('btnCopy').addEventListener('click', function(){
       document.body.appendChild(ta); ta.focus(); ta.select();
       document.execCommand('copy'); document.body.removeChild(ta);
       done();
-    } catch(e){ showToast('error', 'Could not copy to clipboard.'); }
+    } catch(e){ showToast('error', I18n.t('communication.toast.copyFailed')); }
   };
   if (navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(text).then(done).catch(fail);
@@ -2177,7 +2231,7 @@ function openSendModal(){
   if (!app) return;
   var draft = collectEmailState();
   if (!draft.recipients.length){
-    showToast('error', 'Add at least one recipient before sending.');
+    showToast('error', I18n.t('communication.toast.addRecipient'));
     return;
   }
   document.getElementById('sendRecipients').textContent = draft.recipientsText;
@@ -2192,7 +2246,7 @@ sendConfirmBtn.addEventListener('click', function(){
   if (!app) return;
   var draft = collectEmailState();
   if (!window.STUAuth || typeof window.STUAuth.requestGmailAccessToken !== 'function'){
-    showToast('error', 'Gmail sending is unavailable — please reload the page.');
+    showToast('error', I18n.t('communication.toast.gmailUnavailable'));
     return;
   }
   sendConfirmBtn.disabled = true;
@@ -2210,7 +2264,7 @@ sendConfirmBtn.addEventListener('click', function(){
       return sendGmailMessage(accessToken, mime);
     })
     .then(function(){
-      showToast('success', 'Email sent to ' + draft.recipients.length + ' recipient(s) from ' + admin.email + '.');
+      showToast('success', I18n.t('communication.toast.emailSent', { count: draft.recipients.length, email: admin.email }));
       delete state.drafts[app.id];
       renderCards();
       closeModal(sendOverlay);
@@ -2218,7 +2272,7 @@ sendConfirmBtn.addEventListener('click', function(){
     })
     .catch(function(err){
       console.error(err);
-      showToast('error', (err && err.message) || 'Could not send this email. Please try again.');
+      showToast('error', (err && err.message) || I18n.t('communication.toast.sendFailed'));
     })
     .finally(function(){
       sendConfirmBtn.disabled = false;
@@ -2234,31 +2288,45 @@ var errorSection = document.getElementById('errorSection');
 var lastUpdatedEl = document.getElementById('lastUpdated');
 var refreshBtn = document.getElementById('refreshBtn');
 
+var currentView = 'loading'; // 'loading' | 'empty' | 'error' | 'data'
+var lastErrorInfo = null;
+var lastUpdatedDate = null;
+
 function showEmptyDataState(){
+  currentView = 'empty';
   cardsSection.innerHTML = '';
   mainSection.classList.add('hidden');
   errorSection.innerHTML =
     '<div class="empty-state">' + ICONS.inbox +
-    '<h3>No applications yet</h3>' +
-    '<p>Once responses start coming in through the Google Form, they will appear here automatically — no action needed.</p>' +
+    '<h3>' + escapeHtml(I18n.t('communication.empty.title')) + '</h3>' +
+    '<p>' + escapeHtml(I18n.t('communication.empty.desc')) + '</p>' +
     '</div>';
 }
-function showError(message){
+function showError(info){
+  currentView = 'error';
+  lastErrorInfo = info;
+  var message = (info && info.i18nKey) ? I18n.t(info.i18nKey, info.i18nParams) : ((info && info.raw) || I18n.t('common.somethingWrong'));
   cardsSection.innerHTML = '';
   mainSection.classList.add('hidden');
   errorSection.innerHTML =
     '<div class="error-card">' + ICONS.alert +
-    '<h3>Couldn\'t load applications</h3>' +
+    '<h3>' + escapeHtml(I18n.t('communication.error.title')) + '</h3>' +
     '<p>' + escapeHtml(message) + '</p>' +
-    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>Try again</button>' +
+    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>' + escapeHtml(I18n.t('common.tryAgain')) + '</button>' +
     '</div>';
   document.getElementById('retryBtn').addEventListener('click', load);
+}
+
+function renderLastUpdated(){
+  if (!lastUpdatedDate) return;
+  lastUpdatedEl.textContent = I18n.t('common.updatedAt', { time: lastUpdatedDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) });
 }
 
 /* ============================================================
    LOAD
    ============================================================ */
 function load(){
+  currentView = 'loading';
   showSkeletons();
   errorSection.innerHTML = '';
   mainSection.classList.remove('hidden');
@@ -2282,15 +2350,17 @@ function load(){
       return;
     }
 
+    currentView = 'data';
     state.apps = normalized;
     state.selectedId = null;
     renderCounts();
     onFilterChange();
     renderCards();
-    lastUpdatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    lastUpdatedDate = new Date();
+    renderLastUpdated();
   }).catch(function(err){
     console.error(err);
-    showError(err.message || 'Something went wrong while loading data.');
+    showError({ i18nKey: err.i18nKey, i18nParams: err.i18nParams, raw: err.message });
   }).finally(function(){
     refreshBtn.classList.remove('spinning');
   });
@@ -2300,6 +2370,30 @@ refreshBtn.addEventListener('click', load);
 renderTemplateChoice();
 updateAiActionsVisibility();
 load();
+
+/* ============================================================
+   I18N — react to a live language switch without reloading.
+   ============================================================ */
+I18n.onChange(function(){
+  document.title = I18n.t('communication.docTitle');
+  renderDateFilterLabel();
+  if (currentView === 'data'){
+    renderCounts();
+    onFilterChange();
+    renderCards();
+    renderLastUpdated();
+    var app = currentApp();
+    if (app){
+      renderDetailCard(app);
+      renderTemplateChoice();
+      renderRecipientsHintText();
+    }
+  } else if (currentView === 'empty'){
+    showEmptyDataState();
+  } else if (currentView === 'error'){
+    showError(lastErrorInfo);
+  }
+});
 
 })();
 </script>

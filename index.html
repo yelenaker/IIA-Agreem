@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="theme.js"></script>
+<script src="i18n.js"></script>
 <title>Statistics · STU International Office</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -132,6 +133,21 @@ a{color:inherit;text-decoration:none;}
   background:none;
 }
 .admin-link:hover{border-color:var(--border-strong);color:var(--text);}
+
+/* Language switch (EN / SK) */
+.lang-switch{
+  display:flex;align-items:center;gap:2px;
+  border:1px solid var(--border);border-radius:9px;
+  padding:3px;background:var(--surface);flex:none;
+}
+.lang-switch-btn{
+  border:none;background:none;color:var(--text-secondary);
+  font-size:12px;font-weight:700;letter-spacing:.02em;
+  padding:5px 10px;border-radius:6px;line-height:1;
+  transition:background .15s,color .15s;
+}
+.lang-switch-btn:hover{color:var(--text);}
+.lang-switch-btn.active{background:var(--accent-soft);color:var(--accent);}
 
 /* Signed-in profile chip (replaces "Admin sign in" after login) */
 .auth-area{display:flex;align-items:center;}
@@ -306,20 +322,21 @@ a{color:inherit;text-decoration:none;}
     </svg>
     <div class="brand-text">
       <span class="brand-name">STU International Office</span>
-      <span class="brand-sub">Inter-Institutional Agreements</span>
+      <span class="brand-sub" data-i18n="common.brandSub">Inter-Institutional Agreements</span>
     </div>
   </div>
   <div class="topbar-nav">
-    <a href="index.html" class="nav-link active">Statistics</a>
-    <a href="map.html" class="nav-link">Partner Map</a>
-    <a href="communication.html" class="nav-link">Communication</a>
+    <a href="index.html" class="nav-link active" data-i18n="common.nav.statistics">Statistics</a>
+    <a href="map.html" class="nav-link" data-i18n="common.nav.map">Partner Map</a>
+    <a href="communication.html" class="nav-link" data-i18n="common.nav.communication">Communication</a>
   </div>
   <div class="topbar-right">
     <div id="authArea" class="auth-area">
-      <button type="button" class="admin-link" id="adminSignInBtn">Admin sign in</button>
+      <button type="button" class="admin-link" id="adminSignInBtn" data-i18n="common.adminSignIn">Admin sign in</button>
     </div>
     <div id="gsiHiddenBtn" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-9999px;left:-9999px;"></div>
-    <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
+    <div id="langSwitch"></div>
+    <button id="themeToggle" class="icon-btn" data-i18n-aria-label="common.themeToggleAria" aria-label="Toggle color theme"></button>
   </div>
 </nav>
 
@@ -328,20 +345,20 @@ a{color:inherit;text-decoration:none;}
 <main class="page">
   <header class="page-header">
     <div>
-      <h1>Statistics</h1>
-      <p class="page-sub">Live overview of Inter-Institutional Agreement applications</p>
+      <h1 data-i18n="statistics.title">Statistics</h1>
+      <p class="page-sub" data-i18n="statistics.subtitle">Live overview of Inter-Institutional Agreement applications</p>
     </div>
     <div class="page-actions">
       <span id="lastUpdated" class="muted"></span>
       <button id="refreshBtn" class="btn">
         <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
-        Refresh
+        <span data-i18n="common.refresh">Refresh</span>
       </button>
     </div>
   </header>
 
-  <section id="cardsSection" class="cards-grid" aria-label="Summary statistics"></section>
-  <section id="chartsSection" class="charts-grid" aria-label="Charts"></section>
+  <section id="cardsSection" class="cards-grid" data-i18n-aria-label="statistics.aria.summary" aria-label="Summary statistics"></section>
+  <section id="chartsSection" class="charts-grid" data-i18n-aria-label="statistics.aria.charts" aria-label="Charts"></section>
 </main>
 
 <script>
@@ -355,6 +372,15 @@ a{color:inherit;text-decoration:none;}
    The backend is not modified — the frontend adapts to it.
 */
 var API_BASE = "https://script.google.com/macros/s/AKfycby0Gcw_lb4r4cY1Pa4xhdclmt-tOfiAXNXQhmxgJB_YsR1DIMoV4nVD7OHIDiQftTnFig/exec";
+
+/* ============================================================
+   I18N — static markup is translated via data-i18n attributes;
+   dynamically generated content (cards, charts, empty/error
+   states) is rebuilt on language change, further down.
+   ============================================================ */
+I18n.initLangSwitch('langSwitch');
+I18n.apply(document);
+document.title = I18n.t('statistics.docTitle');
 
 /* ============================================================
    ICONS (inline, no external icon library)
@@ -396,7 +422,12 @@ function apiGet(action, params){
     if (params[k] !== undefined && params[k] !== null && params[k] !== '') url.searchParams.set(k, params[k]);
   });
   return fetch(url.toString(), { method:'GET' }).then(function(res){
-    if (!res.ok) throw new Error('The server responded with status ' + res.status + '.');
+    if (!res.ok){
+      var e = new Error(I18n.t('common.serverStatusError', { status: res.status }));
+      e.i18nKey = 'common.serverStatusError';
+      e.i18nParams = { status: res.status };
+      throw e;
+    }
     return res.json();
   }).then(function(json){
     if (json && json.error) throw new Error(json.error);
@@ -465,12 +496,13 @@ function extractList(raw){
    translates them before sending.
    ------------------------------------------------------------ */
 var STATUS_META = {
-  new:         { label:'New',         varName:'--status-new' },
-  in_progress: { label:'In Progress', varName:'--status-progress' },
-  signed:      { label:'Signed',      varName:'--status-signed' },
-  rejected:    { label:'Rejected',    varName:'--status-rejected' },
-  unknown:     { label:'Other',       varName:'--text-tertiary' }
+  new:         { i18nKey:'common.status.new',        varName:'--status-new' },
+  in_progress: { i18nKey:'common.status.inProgress',  varName:'--status-progress' },
+  signed:      { i18nKey:'common.status.signed',      varName:'--status-signed' },
+  rejected:    { i18nKey:'common.status.rejected',    varName:'--status-rejected' },
+  unknown:     { i18nKey:'common.status.other',       varName:'--text-tertiary' }
 };
+function statusLabel(key){ return I18n.t((STATUS_META[key] || STATUS_META.unknown).i18nKey); }
 function classifyStatus(raw){
   var s = (raw||'').toString().trim();
   if (!s) return 'unknown';
@@ -535,7 +567,8 @@ function groupByYear(list){
   list.forEach(function(a){ if (a.dateObj){ var y=a.dateObj.getFullYear(); map.set(y,(map.get(y)||0)+1); } });
   return Array.from(map, function(e){ return { label:String(e[0]), count:e[1] }; }).sort(function(a,b){ return Number(a.label)-Number(b.label); });
 }
-var MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var MONTH_KEYS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function monthAbbrev(idx){ return I18n.t('common.months.' + MONTH_KEYS[idx]); }
 function groupByMonth(list){
   var map = new Map();
   list.forEach(function(a){
@@ -546,7 +579,7 @@ function groupByMonth(list){
   });
   return Array.from(map, function(e){ return { key:e[0], count:e[1] }; }).sort(function(a,b){ return a.key.localeCompare(b.key); })
     .map(function(e){
-      var parts = e.key.split('-'); var label = MONTH_NAMES[Number(parts[1])-1] + ' ' + parts[0];
+      var parts = e.key.split('-'); var label = monthAbbrev(Number(parts[1])-1) + ' ' + parts[0];
       return { label:label, count:e.count };
     });
 }
@@ -554,7 +587,7 @@ function topNWithOther(entries, n){
   if (entries.length <= n) return entries;
   var head = entries.slice(0,n);
   var rest = entries.slice(n).reduce(function(sum,e){return sum+e.count;},0);
-  return head.concat([{ label:'Other', count:rest }]);
+  return head.concat([{ label:I18n.t('common.status.other'), count:rest }]);
 }
 
 /* ============================================================
@@ -585,7 +618,7 @@ function computeAllStats(apps, stats){
     byLevel:    pref(['byStudyLevel','applicationsByStudyLevel','studyLevels'], function(){ return groupCount(apps, function(a){return splitMulti(a.studyLevel);}); }),
     byYear:     pref(['byYear','applicationsByYear'], function(){ return groupByYear(apps); }),
     byMonth:    pref(['byMonth','monthlyApplications'], function(){ return groupByMonth(apps); }),
-    byStatus:   pref(['byStatus','statusDistribution'], function(){ return groupCount(apps, function(a){return STATUS_META[a.statusKey].label;}); }),
+    byStatus:   pref(['byStatus','statusDistribution'], function(){ return groupCount(apps, function(a){return statusLabel(a.statusKey);}); }),
     apps: apps
   };
 }
@@ -594,11 +627,11 @@ function computeAllStats(apps, stats){
    RENDER — cards
    ============================================================ */
 var CARD_DEFS = [
-  { key:'total',      label:'Total Applications',      icon:'total',    varc:'--accent' },
-  { key:'new',        label:'New Applications',        icon:'new',      varc:'--status-new' },
-  { key:'signed',     label:'Signed Agreements',       icon:'signed',   varc:'--status-signed' },
-  { key:'inProgress', label:'Agreements in Progress',  icon:'progress', varc:'--status-progress' },
-  { key:'rejected',   label:'Rejected Applications',   icon:'rejected', varc:'--status-rejected' }
+  { key:'total',      i18nKey:'statistics.cards.total',      icon:'total',    varc:'--accent' },
+  { key:'new',        i18nKey:'statistics.cards.new',        icon:'new',      varc:'--status-new' },
+  { key:'signed',     i18nKey:'statistics.cards.signed',      icon:'signed',   varc:'--status-signed' },
+  { key:'inProgress', i18nKey:'statistics.cards.inProgress', icon:'progress', varc:'--status-progress' },
+  { key:'rejected',   i18nKey:'statistics.cards.rejected',   icon:'rejected', varc:'--status-rejected' }
 ];
 
 var cardsSection = document.getElementById('cardsSection');
@@ -627,7 +660,7 @@ function renderCards(c){
   cardsSection.innerHTML = CARD_DEFS.map(function(d){
     return '<div class="stat-card">' +
       '<div class="stat-icon" style="color:var(' + d.varc + ');background:color-mix(in srgb, var(' + d.varc + ') 14%, transparent)">' + ICONS[d.icon] + '</div>' +
-      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + d.label + '</span></div>' +
+      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + escapeHtml(I18n.t(d.i18nKey)) + '</span></div>' +
     '</div>';
   }).join('');
   CARD_DEFS.forEach(function(d){ animateValue(document.getElementById('val-'+d.key), c[d.key]); });
@@ -637,16 +670,25 @@ function renderCards(c){
    RENDER — charts
    ============================================================ */
 var CHART_DEFS = [
-  { id:'chartCountry',  title:'Applications by Country',      sub:'top countries', type:'bar-h',   dataKey:'byCountry',  color:'--accent',         wide:true },
-  { id:'chartMonthly',  title:'Monthly Applications',          sub:'over time',     type:'line',    dataKey:'byMonth',    color:'--accent',         wide:true },
-  { id:'chartFaculty',  title:'Applications by Faculty',       sub:'STU faculties', type:'bar-h',   dataKey:'byFaculty',  color:'--status-signed' },
-  { id:'chartStatus',   title:'Status Distribution',           sub:'current state', type:'doughnut',dataKey:'byStatus',   color:null },
-  { id:'chartMobility', title:'Applications by Mobility Type', sub:'mobility',      type:'doughnut',dataKey:'byMobility', color:null },
-  { id:'chartLevel',    title:'Applications by Study Level',   sub:'study level',   type:'doughnut',dataKey:'byLevel',    color:null },
-  { id:'chartYear',     title:'Applications by Year',          sub:'yearly totals', type:'bar-v',   dataKey:'byYear',     color:'--gold' }
+  { id:'chartCountry',  titleKey:'statistics.charts.country.title',  subKey:'statistics.charts.country.sub',  type:'bar-h',   dataKey:'byCountry',  color:'--accent',         wide:true },
+  { id:'chartMonthly',  titleKey:'statistics.charts.monthly.title',  subKey:'statistics.charts.monthly.sub',  type:'line',    dataKey:'byMonth',    color:'--accent',         wide:true },
+  { id:'chartFaculty',  titleKey:'statistics.charts.faculty.title',  subKey:'statistics.charts.faculty.sub',  type:'bar-h',   dataKey:'byFaculty',  color:'--status-signed' },
+  { id:'chartStatus',   titleKey:'statistics.charts.status.title',   subKey:'statistics.charts.status.sub',   type:'doughnut',dataKey:'byStatus',   color:null },
+  { id:'chartMobility', titleKey:'statistics.charts.mobility.title', subKey:'statistics.charts.mobility.sub', type:'doughnut',dataKey:'byMobility', color:null },
+  { id:'chartLevel',    titleKey:'statistics.charts.level.title',    subKey:'statistics.charts.level.sub',    type:'doughnut',dataKey:'byLevel',    color:null },
+  { id:'chartYear',     titleKey:'statistics.charts.year.title',     subKey:'statistics.charts.year.sub',     type:'bar-v',   dataKey:'byYear',     color:'--gold' }
 ];
 
-var STATUS_COLOR_BY_LABEL = { 'New':'--status-new','In Progress':'--status-progress','Signed':'--status-signed','Rejected':'--status-rejected','Other':'--text-tertiary' };
+/* Matches a status label back to its color variable regardless of the
+   currently active UI language (labels are translated live via statusLabel()). */
+var STATUS_COLOR_FALLBACK = { 'New':'--status-new','In Progress':'--status-progress','Signed':'--status-signed','Rejected':'--status-rejected','Other':'--text-tertiary' };
+function statusColorVar(label){
+  var keys = Object.keys(STATUS_META);
+  for (var i=0;i<keys.length;i++){
+    if (statusLabel(keys[i]) === label) return STATUS_META[keys[i]].varName;
+  }
+  return STATUS_COLOR_FALLBACK[label];
+}
 var PALETTE = ['--accent','--gold','--amber','--red','--status-progress','--status-new','--status-signed','--status-rejected','--text-tertiary'];
 
 function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
@@ -656,7 +698,7 @@ var chartInstances = {};
 function buildChartsGrid(){
   chartsSection.innerHTML = CHART_DEFS.map(function(c){
     return '<div class="chart-card' + (c.wide?' chart-card--wide':'') + '">' +
-      '<div class="chart-card-head"><h3>' + c.title + '</h3><span class="chart-card-sub">' + c.sub + '</span></div>' +
+      '<div class="chart-card-head"><h3>' + escapeHtml(I18n.t(c.titleKey)) + '</h3><span class="chart-card-sub">' + escapeHtml(I18n.t(c.subKey)) + '</span></div>' +
       '<div class="chart-canvas-wrap"><canvas id="' + c.id + '"></canvas></div>' +
     '</div>';
   }).join('');
@@ -716,7 +758,7 @@ function renderAllCharts(computed){
       });
     } else if (def.type === 'doughnut'){
       var colors = labels.map(function(l,i){
-        return cssVar(STATUS_COLOR_BY_LABEL[l] || PALETTE[i % PALETTE.length]);
+        return cssVar(statusColorVar(l) || PALETTE[i % PALETTE.length]);
       });
       chartInstances[def.id] = new Chart(ctx, {
         type:'doughnut',
@@ -733,31 +775,45 @@ function renderAllCharts(computed){
 /* ============================================================
    EMPTY / ERROR STATES
    ============================================================ */
+var currentView = 'loading'; // 'loading' | 'empty' | 'error' | 'data'
+var lastErrorInfo = null;
+var lastUpdatedDate = null;
+
 function showEmptyState(){
+  currentView = 'empty';
   cardsSection.innerHTML = '';
   chartsSection.innerHTML =
     '<div class="empty-state">' + ICONS.inbox +
-    '<h3>No applications yet</h3>' +
-    '<p>Once responses start coming in through the Google Form, statistics will appear here automatically — no action needed.</p>' +
+    '<h3>' + escapeHtml(I18n.t('statistics.empty.title')) + '</h3>' +
+    '<p>' + escapeHtml(I18n.t('statistics.empty.desc')) + '</p>' +
     '</div>';
 }
 
-function showError(message){
+function showError(info){
+  currentView = 'error';
+  lastErrorInfo = info;
+  var message = (info && info.i18nKey) ? I18n.t(info.i18nKey, info.i18nParams) : ((info && info.raw) || I18n.t('common.somethingWrong'));
   cardsSection.innerHTML = '';
   chartsSection.innerHTML =
     '<div class="error-card">' + ICONS.alert +
-    '<h3>Couldn\'t load statistics</h3>' +
+    '<h3>' + escapeHtml(I18n.t('statistics.error.title')) + '</h3>' +
     '<p>' + escapeHtml(message) + '</p>' +
-    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>Try again</button>' +
+    '<button class="btn" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>' + escapeHtml(I18n.t('common.tryAgain')) + '</button>' +
     '</div>';
   document.getElementById('retryBtn').addEventListener('click', load);
 }
 function escapeHtml(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
+function renderLastUpdated(){
+  if (!lastUpdatedDate) return;
+  lastUpdatedEl.textContent = I18n.t('common.updatedAt', { time: lastUpdatedDate.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) });
+}
+
 /* ============================================================
    LOAD
    ============================================================ */
 function load(){
+  currentView = 'loading';
   showSkeletons();
   refreshBtn.classList.add('spinning');
   Promise.all([
@@ -769,7 +825,9 @@ function load(){
     var appsList = extractList(appsRaw).map(normalizeApplication);
 
     if (!statsData && !appsRaw){
-      throw new Error('The Apps Script API could not be reached. Check the deployment URL and access settings.');
+      var e = new Error(I18n.t('statistics.error.apiUnreachable'));
+      e.i18nKey = 'statistics.error.apiUnreachable';
+      throw e;
     }
     if (!appsList.length && !(statsData && Number(pick(statsData,['totalApplications','total'])) > 0)){
       showEmptyState();
@@ -777,12 +835,14 @@ function load(){
     }
     var computed = computeAllStats(appsList, statsData);
     window.__lastComputed = computed;
+    currentView = 'data';
     renderCards(computed);
     renderAllCharts(computed);
-    lastUpdatedEl.textContent = 'Updated ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    lastUpdatedDate = new Date();
+    renderLastUpdated();
   }).catch(function(err){
     console.error(err);
-    showError(err.message || 'Something went wrong while loading data.');
+    showError({ i18nKey: err.i18nKey, i18nParams: err.i18nParams, raw: err.message });
   }).finally(function(){
     refreshBtn.classList.remove('spinning');
   });
@@ -790,6 +850,23 @@ function load(){
 
 refreshBtn.addEventListener('click', load);
 load();
+
+/* ============================================================
+   I18N — react to a live language switch without reloading:
+   re-run whichever render path matches what's currently on screen.
+   ============================================================ */
+I18n.onChange(function(){
+  document.title = I18n.t('statistics.docTitle');
+  if (currentView === 'data' && window.__lastComputed){
+    renderCards(window.__lastComputed);
+    renderAllCharts(window.__lastComputed);
+    renderLastUpdated();
+  } else if (currentView === 'empty'){
+    showEmptyState();
+  } else if (currentView === 'error'){
+    showError(lastErrorInfo);
+  }
+});
 
 })();
 </script>
