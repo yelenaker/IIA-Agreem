@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="theme.js"></script>
+<script src="translations.js"></script>
 <title>Statistics · STU International Office</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -310,17 +311,52 @@ a{color:inherit;text-decoration:none;}
     </div>
   </div>
   <div class="topbar-nav">
-    <a href="index.html" class="nav-link active">Statistics</a>
-    <a href="map.html" class="nav-link">Partner Map</a>
-    <a href="communication.html" class="nav-link">Communication</a>
+    <a href="index.html" class="nav-link active" data-i18n="Statistics">Statistics</a>
+    <a href="map.html" class="nav-link" data-i18n="Partner Map">Partner Map</a>
+    <a href="communication.html" class="nav-link" data-i18n="Communication">Communication</a>
   </div>
   <div class="topbar-right">
     <div id="authArea" class="auth-area">
-      <button type="button" class="admin-link" id="adminSignInBtn">Admin sign in</button>
+      <button class="admin-link" id="adminSignInBtn" data-i18n="Admin sign in">Admin sign in</button>
     </div>
     <div id="gsiHiddenBtn" style="position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;top:-9999px;left:-9999px;"></div>
+    <div class="language-switch">
+        <button class="lang-btn active" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="sk">SK</button>
+    </div>
     <button id="themeToggle" class="icon-btn" aria-label="Toggle color theme"></button>
   </div>
+
+<style>
+  .language-switch{
+      display:flex;
+      align-items:center;
+      gap:4px;
+      margin-right:6px;
+  }
+
+  .lang-btn{
+      border:none;
+      background:transparent;
+      color:var(--text-secondary);
+      font-size:13px;
+      font-weight:600;
+      cursor:pointer;
+      padding:5px 8px;
+      border-radius:7px;
+      transition:.2s;
+  }
+
+  .lang-btn:hover{
+      background:var(--surface-sunken);
+  }
+
+  .lang-btn.active{
+      background:var(--accent-soft);
+      color:var(--accent);
+  }
+</style>
+
 </nav>
 
 <script src="auth.js"></script>
@@ -328,14 +364,18 @@ a{color:inherit;text-decoration:none;}
 <main class="page">
   <header class="page-header">
     <div>
-      <h1>Statistics</h1>
-      <p class="page-sub">Live overview of Inter-Institutional Agreement applications</p>
+      <h1 data-i18n="Statistics">Statistics</h1>
+    <p
+        class="page-sub"
+        data-i18n="Live overview of Inter-Institutional Agreement applications">
+        Live overview of Inter-Institutional Agreement applications
+    </p>
     </div>
     <div class="page-actions">
       <span id="lastUpdated" class="muted"></span>
       <button id="refreshBtn" class="btn">
         <svg viewBox="0 0 24 24"><path d="M3.5 12a8.5 8.5 0 0 1 14.5-6M20.5 12a8.5 8.5 0 0 1-14.5 6"/><path d="M17.5 3v4.5H13M6.5 21v-4.5H11"/></svg>
-        Refresh
+        <span data-i18n="Refresh">Refresh</span>
       </button>
     </div>
   </header>
@@ -627,7 +667,7 @@ function renderCards(c){
   cardsSection.innerHTML = CARD_DEFS.map(function(d){
     return '<div class="stat-card">' +
       '<div class="stat-icon" style="color:var(' + d.varc + ');background:color-mix(in srgb, var(' + d.varc + ') 14%, transparent)">' + ICONS[d.icon] + '</div>' +
-      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + d.label + '</span></div>' +
+      '<div><span class="stat-value" id="val-' + d.key + '">0</span><br/><span class="stat-label">' + t(d.label) + '</span></div>' +
     '</div>';
   }).join('');
   CARD_DEFS.forEach(function(d){ animateValue(document.getElementById('val-'+d.key), c[d.key]); });
@@ -655,8 +695,8 @@ var chartInstances = {};
 
 function buildChartsGrid(){
   chartsSection.innerHTML = CHART_DEFS.map(function(c){
-    return '<div class="chart-card' + (c.wide?' chart-card--wide':'') + '">' +
-      '<div class="chart-card-head"><h3>' + c.title + '</h3><span class="chart-card-sub">' + c.sub + '</span></div>' +
+    return '<div class="chart-card' + (c.wide ? ' chart-card--wide' : '') + '">' +
+      '<div class="chart-card-head"><h3>' + t(c.title) + '</h3><span class="chart-card-sub">' + t(c.sub) + '</span></div>' +
       '<div class="chart-canvas-wrap"><canvas id="' + c.id + '"></canvas></div>' +
     '</div>';
   }).join('');
@@ -678,7 +718,10 @@ function renderAllCharts(computed){
     if (!entries.length){
       chartInstances[def.id] = null;
       var wrap = ctx.canvas.parentElement;
-      wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:13px;">No data yet</div>';
+      wrap.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);font-size:13px;">'
+      + t("No data yet") +
+      '</div>';
       return;
     }
 
@@ -789,6 +832,11 @@ function load(){
 }
 
 refreshBtn.addEventListener('click', load);
+
+document.querySelectorAll(".lang-btn").forEach(button => {
+    button.addEventListener("click", load);
+});
+
 load();
 
 })();
