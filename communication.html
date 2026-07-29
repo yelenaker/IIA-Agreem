@@ -2296,10 +2296,35 @@ function load(){
   });
 }
 
-refreshBtn.addEventListener('click', load);
-renderTemplateChoice();
-updateAiActionsVisibility();
-load();
+/* ============================================================
+   ACCESS CONTROL — Communication Center is an Admin-only page.
+   ------------------------------------------------------------
+   The [data-admin-only] button disabling above (applyRolePermissions)
+   only stops an already-loaded page from being *used* by a non-admin;
+   it doesn't stop the page from loading and showing drafts, applicant
+   data, templates, etc. in the first place. requireAdminOrRedirect()
+   (auth.js) re-verifies the current sign-in with the backend and
+   sends anyone who isn't a verified, authorized Admin back to the
+   Partner Map before any of that is ever fetched. Every action this
+   page calls (drafts/faculties/sender/emailTemplates/saveDraft/
+   deleteDraft/sendEmail/ai) is also independently rejected server-side
+   for non-admins — see PermissionService.gs.
+   ============================================================ */
+function boot(){
+  refreshBtn.addEventListener('click', load);
+  renderTemplateChoice();
+  updateAiActionsVisibility();
+  load();
+}
+
+if (window.STUAuth && typeof window.STUAuth.requireAdminOrRedirect === 'function'){
+  window.STUAuth.requireAdminOrRedirect('map.html').then(function(isAdmin){
+    if (isAdmin) boot();
+  });
+} else {
+  // auth.js didn't load — fail closed rather than show admin data.
+  window.location.replace('map.html');
+}
 
 })();
 </script>

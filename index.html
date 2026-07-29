@@ -831,13 +831,35 @@ function load(){
   });
 }
 
-refreshBtn.addEventListener('click', load);
-
-document.querySelectorAll(".lang-btn").forEach(button => {
+/* ============================================================
+   ACCESS CONTROL — Statistics is an Admin-only page.
+   ------------------------------------------------------------
+   requireAdminOrRedirect() (auth.js) re-verifies the current
+   sign-in with the backend and sends anyone who isn't a verified,
+   authorized Admin back to the Partner Map — Guests and signed-in
+   non-admins alike. Nothing below (including the very first
+   fetch) runs until that comes back true, so a direct URL hit
+   never has a chance to display real data before bouncing.
+   The 'statistics' action is also rejected server-side for
+   non-admins (see PermissionService.gs) — this check exists so
+   they're never even shown the attempt.
+   ============================================================ */
+function boot(){
+  refreshBtn.addEventListener('click', load);
+  document.querySelectorAll(".lang-btn").forEach(function(button){
     button.addEventListener("click", load);
-});
+  });
+  load();
+}
 
-load();
+if (window.STUAuth && typeof window.STUAuth.requireAdminOrRedirect === 'function'){
+  window.STUAuth.requireAdminOrRedirect('map.html').then(function(isAdmin){
+    if (isAdmin) boot();
+  });
+} else {
+  // auth.js didn't load — fail closed rather than show admin data.
+  window.location.replace('map.html');
+}
 
 })();
 </script>

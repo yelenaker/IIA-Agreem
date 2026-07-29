@@ -12,6 +12,11 @@
        jump to another page on this site) restores it instantly.
      - Exposing window.STUAuth so each page's own script can gate
        its admin-only controls. Two roles only: 'Admin' / 'Viewer'.
+     - Exposing requireAdminOrRedirect(), which index.html and
+       communication.html call on load to re-verify with the
+       backend and bounce non-admins back to the Partner Map —
+       this is what stops a direct URL hit from ever showing
+       protected content, not just disabled buttons.
 
    NOTE: this is the FRONTEND half of authorization only. It makes
    the UI honest, it is not a security boundary — every state-
@@ -153,6 +158,7 @@ function render(){
     authArea.innerHTML = '<button type="button" class="admin-link" id="adminSignInBtn">Admin sign in</button>';
     var btn = document.getElementById('adminSignInBtn');
     if (btn) btn.addEventListener('click', triggerSignIn);
+    updateProtectedNav();
     return;
   }
 
@@ -175,6 +181,45 @@ function render(){
 
   var signOutBtn = document.getElementById('signOutBtn');
   if (signOutBtn) signOutBtn.addEventListener('click', signOut);
+
+  updateProtectedNav();
+}
+
+/* ------------------------------------------------------------
+   Nav-link gating — COSMETIC ONLY. Hides/disables the topbar
+   links to Admin-only pages (Statistics, Communication) for
+   anyone who isn't currently a verified, authorized Admin. Every
+   page that loads this file gets this automatically, since it's
+   run from render(). The real enforcement is requireAdminOrRedirect()
+   below (frontend) and PermissionService.gs (backend) — this just
+   keeps a Guest/Viewer from being invited to click a link that
+   will only ever bounce them back.
+   ------------------------------------------------------------ */
+var ADMIN_ONLY_PAGES = ['index.html', 'communication.html'];
+var navLockStyleInjected = false;
+function ensureNavLockStyle(){
+  if (navLockStyleInjected) return;
+  navLockStyleInjected = true;
+  var style = document.createElement('style');
+  style.textContent = '.nav-link.nav-locked{opacity:.4;cursor:not-allowed;pointer-events:none;}';
+  document.head.appendChild(style);
+}
+function updateProtectedNav(){
+  ensureNavLockStyle();
+  var isAdmin = session.role === 'Admin' && session.authorized;
+  document.querySelectorAll('.topbar-nav a.nav-link').forEach(function(a){
+    var href = (a.getAttribute('href') || '').split('#')[0].split('?')[0];
+    if (ADMIN_ONLY_PAGES.indexOf(href) === -1) return; // Partner Map link: never gated
+    if (isAdmin){
+      a.classList.remove('nav-locked');
+      a.removeAttribute('aria-disabled');
+      a.removeAttribute('title');
+    } else {
+      a.classList.add('nav-locked');
+      a.setAttribute('aria-disabled', 'true');
+      a.setAttribute('title', 'Sign in as an authorized admin to open this page.');
+    }
+  });
 }
 
 /* ------------------------------------------------------------
@@ -277,6 +322,60 @@ function requestGmailAccessToken(){
   });
 }
 
+/* ------------------------------------------------------------
+   PUBLIC — the guard every Admin-only page (Statistics,
+   Communication) calls at the very top of its own script, before
+   fetching or rendering anything. Unlike isAdmin() (a snapshot of
+   whatever's cached in localStorage — which the visitor fully
+   controls and could edit by hand), this ALWAYS re-verifies the
+   idToken against the backend first. Redirects to redirectUrl
+   (default 'map.html') and resolves false for every failure case:
+   no cached token (Guest), invalid/expired token, a valid token
+   that isn't an active Admin, or the backend being unreachable.
+   Fails CLOSED — the caller only proceeds when this resolves true.
+
+   This makes the frontend honest about who gets to *see* a page,
+   but it is still not the security boundary: every Apps Script
+   endpoint those pages call must independently enforce the same
+   rule server-side (see PermissionService.gs / requireAdmin() in
+   Auth.gs). A person could delete this whole check from their own
+   browser and it would change nothing about what the backend lets
+   them do.
+   ------------------------------------------------------------ */
+function requireAdminOrRedirect(redirectUrl){
+  redirectUrl = redirectUrl || 'map.html';
+  var cached = loadSession();
+  var idToken = (cached && cached.idToken) || session.idToken;
+
+  if (!idToken){
+    window.location.replace(redirectUrl);
+    return Promise.resolve(false);
+  }
+
+  return verifyWithBackend(idToken).then(function(result){
+    session = {
+      email: result.email || (cached && cached.email) || session.email,
+      name: result.name || (cached && cached.name) || session.name,
+      picture: result.picture || (cached && cached.picture) || session.picture,
+      idToken: idToken,
+      role: result.role,
+      authorized: result.authorized
+    };
+    persistSession();
+    render();
+    notify();
+    if (!result.authorized){
+      window.location.replace(redirectUrl);
+      return false;
+    }
+    return true;
+  }).catch(function(err){
+    console.error('requireAdminOrRedirect: backend check failed, failing closed:', err);
+    window.location.replace(redirectUrl);
+    return false;
+  });
+}
+
 function setupGsi(){
   if (!window.google || !google.accounts || !google.accounts.id) return;
   google.accounts.id.initialize({
@@ -345,7 +444,8 @@ window.STUAuth = {
   getIdToken: function(){ return session.idToken; },
   onChange: function(cb){ if (typeof cb === 'function') listeners.push(cb); },
   signOut: signOut,
-  requestGmailAccessToken: requestGmailAccessToken
+  requestGmailAccessToken: requestGmailAccessToken,
+  requireAdminOrRedirect: requireAdminOrRedirect
 };
 
 if (document.readyState === 'loading'){
