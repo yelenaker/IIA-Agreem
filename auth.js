@@ -49,7 +49,7 @@
 var GOOGLE_CLIENT_ID = "1026351516868-ckgto5ppumua6m2htqcoeuubid3jrnkb.apps.googleusercontent.com";
 
 /* Same Apps Script web app URL every page already talks to. */
-var API_BASE = "https://script.google.com/macros/s/AKfycby0Gcw_lb4r4cY1Pa4xhdclmt-tOfiAXNXQhmxgJB_YsR1DIMoV4nVD7OHIDiQftTnFig/exec";
+var API_BASE = "https://script.google.com/macros/s/AKfycbybmUck80QWsilKKg3zNbF556m8XeVTLj7MKAv8qzM_PZY8RkNWoTgZwOYdz_gBGnmm0g/exec";
 
 /* Scope needed to send mail as the signed-in user through the
    Gmail REST API. Requested via a SEPARATE OAuth token client
