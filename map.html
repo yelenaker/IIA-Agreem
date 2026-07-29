@@ -648,13 +648,23 @@ var FACULTY_DEFS = [
   { code:'UM',    label:'Institute of Management (UM)' }
 ];
 var MOBILITY_DEFS = [
-  { code:'SMS', label:'SMS — Student Mobility for Studies' },
-  { code:'SMT', label:'SMT — Student Mobility for Traineeships' },
-  { code:'STA', label:'STA — Staff Mobility for Teaching' },
-  { code:'STT', label:'STT — Staff Mobility for Training' },
-  { code:'BIP', label:'BIP' }
+  { code:'SMS', label:'SMS — Študentská mobilita na štúdium' },
+  { code:'SMT', label:'SMT — Študentská mobilita na stáž' },
+  { code:'STA', label:'STA — Mobilita zamestnancov na výučbu' },
+  { code:'STT', label:'STT — Mobilita zamestnancov na školenie' },
+  { code:'BIP', label:'BIP — Blended Intensive Programme' }
 ];
 var LEVEL_DEFS = ['Bachelor', 'Master', 'PhD'];
+
+// Shared code → full label lookup, built from MOBILITY_DEFS above so the
+// filter panel and the map popup always show the exact same Slovak text.
+var MOBILITY_LABEL_MAP = MOBILITY_DEFS.reduce(function(acc, m){
+  acc[m.code] = m.label;
+  return acc;
+}, {});
+function mobilityLabel(code){
+  return MOBILITY_LABEL_MAP[code] || code; // falls back to the raw code if unknown
+}
 
 function extractFacultyCodes(str){
   return splitMulti(str).map(function(s){
@@ -888,7 +898,7 @@ function buildPopupHtml(loc){
     }
     if (a.mobilityCodes.length){
       html += '<div class="popup-row"><div class="popup-row-label">Mobility Types</div><div class="popup-chips">' +
-        a.mobilityCodes.map(function(c){ return '<span class="popup-chip">' + escapeHtml(c) + '</span>'; }).join('') + '</div></div>';
+        a.mobilityCodes.map(function(c){ return '<span class="popup-chip">' + escapeHtml(mobilityLabel(c)) + '</span>'; }).join('') + '</div></div>';
     }
     if (a.levels.length){
       html += '<div class="popup-row"><div class="popup-row-label">Study Levels</div><div class="popup-chips">' +
